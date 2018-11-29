@@ -1,3 +1,2 @@
-
-cach install
-ngay 29 11 2018
+cách chạy project 
+mở terminar tại thư mục 
