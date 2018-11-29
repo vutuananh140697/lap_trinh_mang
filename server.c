@@ -19,6 +19,12 @@ const int MAX_WRONGPASSWORD=2;
 //============================ GLOBAL VARIABLE =================
 Node **database_link_list;
 enum ProtocolState loginProtocolState[BACKLOG];
+enum Auction_ProtocolState[BACKLOG];
+
+typedef struct map_socket_to_room_type{
+	Room *room;
+}map_socket_to_room_type;
+map_socket_to_room_type map_socket_to_room;
 //============================ FUNCTION =======================
 //load data from account.txt to database_link_list
 
@@ -446,8 +452,14 @@ int main(int argc,char *argv[])
 	//change protocol
 	//set new protocol state ==> web protocol
 		//reviece and send message
-		// if receive enter room ==> change protocol ==> set protocol state to be in room
+		// if receive enter room ==> find room by id
+		 //change protocol ==> change room's user attribute  and add matching from user to room
+		//map_socket_to_room[socket] = room
 	
-	//
+	
+	//receive set price 
+		// tim tu socket --> room tuong ung
+		// check and set new price, send to all user,
+
 	return 0;
 }

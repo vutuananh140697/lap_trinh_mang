@@ -7,11 +7,12 @@
 #define TIMEINTEVAL 30000;
 #define NUMBER_NOTIFY 3;
 //state of protocol
-enum ProtocolState{
-	out_room =0,//still not receive user id
-	in_room =1,// receive user id and waiting for password
-	end_room =2,
-};
+enum Auction_ProtocolState{
+	no_set_price =0,//still not receive user id
+	have_set_price =1,// receive user id and waiting for password
+	final_temp_set_price =2,
+	final_set_price =3,
+}
 enum message_code{
 	//auction
 	REQUEST_NEW_PRICE=40,
