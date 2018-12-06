@@ -41,5 +41,6 @@ int receive_message(int socket,message *msg);
 // send message function
 // in all function socket input is socket to communicate,
 
-
+int send_ENTER_ROOM();
+int send_SET_PRICE();
 #endif

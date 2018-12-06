@@ -189,10 +189,77 @@ int main(int argc,char *argv[]){
 	close(client_sock);
 
 	// send user id
+	int send_USERID(int socket,char userid[]);
+
 	//receive message
+
+	int receive_message(int socket,message *msg);
 	//send password
+	int send_PASSWORD(int socket,char password[]);
 	//receive message
+	int receive_message(int socket,message *msg);
+
+	//
+	int choose;
+	scanf("%d%*c",&choose);
+	if(choose==0){
+		int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
+		int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
+		int next_page;
+		scanf("%d%*c",&next_page);
+		if(next_page==0){
+			int send_REQUEST_ROOM_DETAIL(int socket,ROOM_LIST_PARAM param);
+
+			int receive_REQUEST_ROOM_DETAIL(int socket,ROOM_LIST_RESPOND *data);
+
+			int enter_room;
+			scanf("%d%*c",&enter_room);
+			if(enter_room==0){
+				int send_REQUEST_BUY_NOW(int socket,ROOM_LIST_PARAM param);
+				int receive_REQUEST_BUY_NOW(int socket,ROOM_LIST_RESPOND *data);
+			}
+			else if(enter_room==1){
+					int send_ENTER_ROOM();
+					int receive_message(int socket,message *msg);
+
+					send_SET_PRICE();
+					int receive_message(int socket,message *msg);
+
+					if(have any message come){
+						int receive_message(int socket,message *msg); 
+						if(message is new price){
+
+						}
+						else{ // thong bao thang cuoc lan 1, lan 2, lan 3
+						}
+					}
+
+					}
+			else if(enter_room==2){
+				int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
+				int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
+			}
+		}
+		else if(next_page==1){
+			int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
+			int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
+		}
+
+		
+	}
+	else if(choose==1){
+
+		int send_REQUEST_MAKE_ROOM(int socket,ROOM_LIST_PARAM param);
+		int receive_REQUEST_MAKE_ROOM(int socket,ROOM_LIST_RESPOND *data);
+	}
+	else if(choose==2){
+		send_REQUEST_MY_ROOM_LIST();
+		receive_REQUEST_MY_ROOM_LIST();
+	}
 	
+
+
+
 	// }
 	
 		
