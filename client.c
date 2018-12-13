@@ -77,6 +77,8 @@ int main(int argc,char *argv[]){
 	int msg_len, bytes_sent, bytes_received;
 	char userid[200],password[200];
 	int choosemenu;
+	int choose;
+	int enter_room;
 
 	//get server info
 	strcpy(SERVER_ADDR,argv[1]);
@@ -157,7 +159,22 @@ int main(int argc,char *argv[]){
 						scanf("%d%*c",&choosemenu);
 						switch(choosemenu){
 							case 1:
-								printf("some funny function will be here soon\n");
+								//printf("some funny function will be here soon\n");
+
+								printf("Nhap lua chon: \n");
+								scanf("%d", &choose);
+								if(choose == 1){
+									ROOM_LIST_PARAM 
+									if(send_REQUEST_ROOM_LIST(client_sock, 0) == -1)
+										{printf("connect is die\n");return -1;}
+									ROOM_LIST_RESPOND msg;
+									if(receive_REQUEST_ROOM_LIST(client_sock, msg) == -1)
+										{printf("connect is die\n");return -1;}
+
+								}
+								else if(choose == 2){
+
+								}
 								break;
 							case 2:
 							//send logout request
@@ -188,7 +205,7 @@ int main(int argc,char *argv[]){
 		
 	close(client_sock);
 
-	// send user id
+	/*// send user id
 	int send_USERID(int socket,char userid[]);
 
 	//receive message
@@ -260,7 +277,7 @@ int main(int argc,char *argv[]){
 
 
 
-	// }
+	// }*/
 	
 		
 	return 0;

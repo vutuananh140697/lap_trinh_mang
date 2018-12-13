@@ -8,7 +8,7 @@
 typedef struct Room {
 struct Room *next;
 int id;
-Node *user;
+char *username;
 Queue *product_list;
 } Room;
 
@@ -18,10 +18,10 @@ Room** create_room_list();
 //create a new node 
 //new node will have soluongdangnhapsai=0,islogin=0
 //return new node
-Room *creat_newroom(int id, Node *user, Queue *product_list);
+Room *creat_newroom(int id, char* username, Queue *product_list);
 // add new node to link list
 //head: head of link list,name,password,status: info of newnode
-Room* add_new_room(Room **head, int id, Node *user, Queue *product_list);
+Room* add_new_room(Room **head, int id, char *username, Queue *product_list);
 //print value in a linklist
 //use for debug
 //param:head[IN]:head of link list

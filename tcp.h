@@ -24,4 +24,7 @@ int send_all_byte(int socket,void *buff,int number_byte_to_send);
 int send_a_int(int socket,int value);
 int send_a_string(int socket,char *str);
 int check_if_a_file_exist(char *filename);
+
+int send_room_list(int socket, roomlist *header, int room_length);
+int send_a_queue(int socket, Queue *item);
 #endif
