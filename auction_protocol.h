@@ -1,5 +1,5 @@
-#ifndef __LOGIN_PROTOCOL__
-#define __LOGIN_PROTOCOL__
+#ifndef __AUCTION_PROTOCOL__
+#define __AUCTION_PROTOCOL__
 #include "tcp.h"
 #include <string.h>
 #include <stdlib.h>
@@ -12,8 +12,12 @@ enum Auction_ProtocolState{
 	have_set_price =1,// receive user id and waiting for password
 	final_temp_set_price =2,
 	final_set_price =3,
-}
-enum message_code{
+};
+typedef struct Auction_Data{
+	int user_id;
+	int room_id;
+} Auction_Data;
+enum auction_message_code{
 	//auction
 	REQUEST_NEW_PRICE=40,
 	REQUEST_SET_PRICE=41,
@@ -26,17 +30,17 @@ enum message_code{
 	RESPOND_EXIT_ROOM =51,
 	
 	//unknow
-	UNKNOWN=-1
+	AUCTION_UNKNOWN=-1
 };
 
-typedef struct message{
-	enum message_code code;
+typedef struct auction_message{
+	enum auction_message_code code;
 	int data_len;
 	void* data;
-} message;
+} auction_message;
 //core function
-int send_message(int socket,message msg);
-int receive_message(int socket,message *msg);
+int send_auction_message(int socket,auction_message msg);
+int receive_auction_message(int socket,auction_message *msg);
 
 // send message function
 // in all function socket input is socket to communicate,

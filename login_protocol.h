@@ -1,16 +1,21 @@
 #ifndef __LOGIN_PROTOCOL__
 #define __LOGIN_PROTOCOL__
 #include "tcp.h"
+#include "linklist.h"
 #include <string.h>
 #include <stdlib.h>
 #define MAXUSERID 200;
 //state of protocol
-enum ProtocolState{
+enum Login_ProtocolState{
 	no_connect,//still not receive user id
 	correct_id,// receive user id and waiting for password
 	authorized //receive right password
 };
-enum message_code{
+typedef struct Login_Data{
+	int number_wrong_password;
+	Node *user;
+} Login_Data;
+enum login_message_code{
 	// user id case
 	USERID=10,
 	USERID_NOTFOUND=11,
@@ -29,17 +34,17 @@ enum message_code{
 	//reset
 	RESET=40,
 	//unknow
-	UNKNOWN=-1
+	LOGIC_UNKNOWN=-1
 };
 
-typedef struct message{
-	enum message_code code;
+typedef struct login_message{
+	enum login_message_code code;
 	int data_len;
 	void* data;
-} message;
+} login_message;
 //core function
-int send_message(int socket,message msg);
-int receive_message(int socket,message *msg);
+int send_message(int socket,login_message msg);
+int receive_message(int socket,login_message *msg);
 
 // send message function
 // in all function socket input is socket to communicate,
@@ -68,7 +73,7 @@ int send_LOGOUT_UNSUCCESS(int socket);
 //RESET
 int send_RESET(int socket);
 //param:clientmessage[IN]:customize message to sent
-int send_UNKNOWN(int socket,message clientmessage);
+int send_UNKNOWN(int socket,login_message clientmessage);
 
 
 

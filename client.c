@@ -81,7 +81,7 @@ int main(int argc,char *argv[]){
 	//get server info
 	strcpy(SERVER_ADDR,argv[1]);
 	SERVER_PORT=atoi(argv[2]);
-	message msg;
+	login_message msg;
 	
 	
 	
@@ -95,172 +95,82 @@ int main(int argc,char *argv[]){
 		return 0;
 	}
 
-	while(1){
-		
-		printf("enter your user id:('q' to quit)");scanf("%[^\n]%*c",userid);
 
-		if(strcmp(userid,"q")==0)
-			break;
-		//send login request with user id
-		if(send_USERID(client_sock,userid)==-1)
-			{close(client_sock);printf("connect is die\n");return -1;}
-		//receive respond from server
-		if(receive_message(client_sock,&msg)==-1){
-			printf("connect is die\n");return -1;}
-		// if no userid is match to userid have been entered
-		if(msg.code==USERID_NOTFOUND){
-			printf("wrong user id\n");
-		}
-		// if no userid is blocked
-		else if(msg.code==USERID_BLOCK){
-			printf("user id is block\n");
-		}
-		// if no userid is found
-		else if(msg.code==USERID_FOUND){
-			while(1){
-				//get password
-				printf("enter your password:('q' to sign in another account): ");
-
-				scanf("%[^\n]%*c",password);
-				if(strcmp(password,"q")==0){
-					send_RESET(client_sock);
-					break;
-				}
-				//send password
-				if(send_PASSWORD(client_sock,password))
-					{close(client_sock);printf("connect is die\n");return -1;}
-				// if password is "q" then break;
-
-				//get respond from server
-				if(receive_message(client_sock,&msg)==-1){
-					printf("connect is die\n");return -1;}
-				//if enter a right password
-				if(msg.code==PASSWORD_RIGHT){
-					//stop enter password
-					break;
-				}
-				//if enter a wrong password
-				else if(msg.code==PASSWORD_WRONG){
-					printf("wrong password\n");
-				}
-				//if enter a wrong password made this account to be block
-				else if(msg.code==PASSWORD_BLOCK){
-					printf("account is block\n");
-					break;
-				}
-			}
-			//if passsword is right
-			if(msg.code==PASSWORD_RIGHT){
-					do{
-						//display some menu
-						printf("MENU:\n1.developing function\n2.logout:");
-						scanf("%d%*c",&choosemenu);
-						switch(choosemenu){
-							case 1:
-								printf("some funny function will be here soon\n");
-								break;
-							case 2:
-							//send logout request
-								if(send_LOGOUT(client_sock)==-1)
-									{close(client_sock);printf("connect is die\n");return -1;}
-								if(receive_message(client_sock,&msg)==-1){
-									printf("connect is die\n");return -1;}
-								//if logout success
-								if(msg.code==LOGOUT_SUCCESS){
-									printf("goodbye!\n");
-								}
-								else if(msg.code==LOGOUT_UNSUCCESS){
-									printf("logout uncess!\n");
-								}
-								else{
-									printf("unknown code from server!\n");
-								}
-								break;
-							default:
-								printf("please enter a number in range 1 and 2!\n");
-								break;
-						}
-					}while(choosemenu!=2);
-				}
-		}
 		
-	}
-		
-	close(client_sock);
+	// close(client_sock);
 
 	// send user id
-	int send_USERID(int socket,char userid[]);
+	send_USERID(client_sock,"huy");
 
 	//receive message
 
-	int receive_message(int socket,message *msg);
-	//send password
-	int send_PASSWORD(int socket,char password[]);
+	receive_message(client_sock,&msg);
+	// //send password
+	send_PASSWORD(client_sock,"1");
 	//receive message
-	int receive_message(int socket,message *msg);
+	receive_message(client_sock,&msg);
+	printf("%s",(char *)msg.data);
 
-	//
-	int choose;
-	scanf("%d%*c",&choose);
-	if(choose==0){
-		int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
-		int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
-		int next_page;
-		scanf("%d%*c",&next_page);
-		if(next_page==0){
-			int send_REQUEST_ROOM_DETAIL(int socket,ROOM_LIST_PARAM param);
+	
+	// int choose;
+	// scanf("%d%*c",&choose);
+	// if(choose==0){
+	// 	ROOM_LIST_PARAM param;
+	// 	send_REQUEST_ROOM_LIST(client_sock, param);
+	// 	ROOM_LIST_PARAM room_list;
+	// 	receive_REQUEST_ROOM_LIST(client_sock,&room_list);
+	// 	// int next_page;
+	// 	// scanf("%d%*c",&next_page);
+	// 	// if(next_page==0){
+	// 	// 	int send_REQUEST_ROOM_DETAIL(int socket,ROOM_LIST_PARAM param);
 
-			int receive_REQUEST_ROOM_DETAIL(int socket,ROOM_LIST_RESPOND *data);
+	// 	// 	int receive_REQUEST_ROOM_DETAIL(int socket,ROOM_LIST_RESPOND *data);
 
-			int enter_room;
-			scanf("%d%*c",&enter_room);
-			if(enter_room==0){
-				int send_REQUEST_BUY_NOW(int socket,ROOM_LIST_PARAM param);
-				int receive_REQUEST_BUY_NOW(int socket,ROOM_LIST_RESPOND *data);
-			}
-			else if(enter_room==1){
-					int send_ENTER_ROOM();
-					int receive_message(int socket,message *msg);
+	// 	// 	int enter_room;
+	// 	// 	scanf("%d%*c",&enter_room);
+	// 	// 	if(enter_room==0){
+	// 	// 		int send_REQUEST_BUY_NOW(int socket,ROOM_LIST_PARAM param);
+	// 	// 		int receive_REQUEST_BUY_NOW(int socket,ROOM_LIST_RESPOND *data);
+	// 	// 	}
+	// 	// 	else if(enter_room==1){
+	// 	// 			int send_ENTER_ROOM();
+	// 	// 			int receive_message(int socket,message *msg);
+	// 	// 			send_SET_PRICE();
+	// 	// 			int receive_message(int socket,message *msg);
 
-					send_SET_PRICE();
-					int receive_message(int socket,message *msg);
+	// 	// 			if(have any message come){
+	// 	// 				int receive_message(int socket,message *msg); 
+	// 	// 				if(message is new price){
 
-					if(have any message come){
-						int receive_message(int socket,message *msg); 
-						if(message is new price){
+	// 	// 				}
+	// 	// 				else{ // thong bao thang cuoc lan 1, lan 2, lan 3
+	// 	// 				}
+	// 	// 			}
+	// 	// 			}
+	// 	// 	else if(enter_room==2){
+	// 	// 		int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
+	// 	// 		int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
+	// 	// 	}
+	// 	// }
+	// 	// else if(next_page==1){
+	// 	// 	int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
+	// 	// 	int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
+	// 	// }
+	// }
+	// else if(choose==1){
 
-						}
-						else{ // thong bao thang cuoc lan 1, lan 2, lan 3
-						}
-					}
-
-					}
-			else if(enter_room==2){
-				int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
-				int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
-			}
-		}
-		else if(next_page==1){
-			int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
-			int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM *param);
-		}
-
-		
-	}
-	else if(choose==1){
-
-		int send_REQUEST_MAKE_ROOM(int socket,ROOM_LIST_PARAM param);
-		int receive_REQUEST_MAKE_ROOM(int socket,ROOM_LIST_RESPOND *data);
-	}
-	else if(choose==2){
-		send_REQUEST_MY_ROOM_LIST();
-		receive_REQUEST_MY_ROOM_LIST();
-	}
+	// 	int send_REQUEST_MAKE_ROOM(int socket,ROOM_LIST_PARAM param);
+	// 	int receive_REQUEST_MAKE_ROOM(int socket,ROOM_LIST_RESPOND *data);
+	// }
+	// else if(choose==2){
+	// 	send_REQUEST_MY_ROOM_LIST();
+	// 	receive_REQUEST_MY_ROOM_LIST();
+	// }
 	
 
 
 
-	// }
+	}
 	
 		
 	return 0;

@@ -1,15 +1,18 @@
-#ifndef __LOGIN_PROTOCOL__
-#define __LOGIN_PROTOCOL__
+#ifndef __WEB_PROTOCOL__
+#define __WEB_PROTOCOL__
 #include "tcp.h"
 #include <string.h>
 #include <stdlib.h>
 #define MAXUSERID 200;
 //state of protocol
-enum ProtocolState{
-	still_not_authorzied =0,
-	authorized = 1
+enum Web_ProtocolState{
+	web_not_authorzied =0,
+	wbe_authorized = 1
 };
-enum message_code{
+typedef struct Web_Data{
+	int user_id;
+}Web_Data;
+enum web_message_code{
 	// user id case
 	REQUEST_ROOM_LIST=10,
 	RESPOND_ROOM_LIST=11,
@@ -27,11 +30,11 @@ enum message_code{
 	RESPOND_MY_ROOM_LIST=51,
 
 	//unknow
-	NOTFOUND=-1
+	LOGIC_NOTFOUND=-1
 };
 
 typedef struct message{
-	enum message_code code;
+	enum web_message_code code;
 	int data_len;
 	void* data;
 } web_message;
