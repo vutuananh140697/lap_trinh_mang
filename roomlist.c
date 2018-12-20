@@ -10,18 +10,18 @@ Room ** create_room_list(){
 //create a new node 
 //new node will have soluongdangnhapsai=0,islogin=0
 //return new node
-Room *creat_newroom(int id, Node *user, Queue *product_list){
+Room *creat_newroom(int id, char *username, Queue *product_list){
   Room *newroom=(Room *)malloc(sizeof(Room));
   newroom->id = id;
-  newroom->user = user;
+  newroom->username = username;
   newroom->product_list = product_list;
   newroom->next=NULL;
   return newroom;
 }
 // add new node to link list
 //head: head of link list,name,password,status: info of newroom
-Room* add_new_room(Room **head, int id, Node *user, Queue *product_list){
-  Room *newroom=creat_newroom(id, user, product_list);
+Room* add_new_room(Room **head, int id, char *username, Queue *product_list){
+  Room *newroom=creat_newroom(id, username, product_list);
   if ((*head)==NULL){
     (*head)=newroom;
   }
@@ -42,7 +42,7 @@ void print_all_room(Room **head){
 
   Room *top=(*head);
   while(top!=NULL){
-    printf("name %s,password %s,status %d,\n",top->user->name,top->user->password,top->user->status);
+    printf("");
     top=top->next;
   }
 }

@@ -4,6 +4,7 @@
 #include<stdlib.h>
 typedef struct Item
 {
+	int id;
 	char *name;
 	char *description;
 	int price;
