@@ -2,6 +2,7 @@
 #define __QUEUE__
 #include <stdio.h>
 #include<stdlib.h>
+#include <string.h>
 typedef struct Item
 {
 	int id;
@@ -22,14 +23,16 @@ typedef struct Queue
     int count; 			
 } Queue;
 
-void Init (Queue *Q); //khoi tao Queue rong
+Queue *Init (Queue *Q); //khoi tao Queue rong
 int Isempty(Queue *Q); //kiem tra Queue rong
-Item *MakeItem(char *name, char *description, int price, int price_immediately);
-Qnode *MakeQnode(char *name, char *description, int price, int price_immediately);
-void Push(Queue *Q, char *name, char *description, int price, int price_immediately); //them phan tu vao cuoi hang doi
+Item *MakeItem(int id, char *name, char *description, int price, int price_immediately);
+Qnode *MakeQnode(int id, char *name, char *description, int price, int price_immediately);
+void Push(Queue *Q, int id, char *name, char *description, int price, int price_immediately); //them phan tu vao cuoi hang doi
+void PushItem(Queue *Q, Item *item);
 Item *Pop(Queue *Q); //Loai bo phan tu khoi dau hang doi
+void printItem(Item *item);
 void Output(Queue Q); //Xuat 
 
-int count_prducts(Queue *Q);
+int count_products(Queue *Q);
 
 #endif

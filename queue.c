@@ -1,10 +1,12 @@
 #include "queue.h"
-#include <string.h>
 
-void Init(Queue *Q)
+
+Queue *Init(Queue *Q)
 {
+    Q = (Queue *)malloc(sizeof(Queue));
     Q->Front = Q->Rear = NULL;
     Q->count = 0;
+    return Q;
 }
 int Isempty (Queue *Q) //kiem tra Queue rong
 {
@@ -13,9 +15,9 @@ int Isempty (Queue *Q) //kiem tra Queue rong
     return 0;
 }
  
-Item *MakeItem(char *name, char *description, int price, int price_immediately, int count){
+Item *MakeItem(int id, char *name, char *description, int price, int price_immediately){
   Item *item = (Item*)malloc(sizeof(Item));
-  item->id = ++count;
+  item->id = id;
   item->name = name;
   item->description = description;
   item->price = price;
@@ -23,18 +25,18 @@ Item *MakeItem(char *name, char *description, int price, int price_immediately, 
   return item;
 }
 
-Qnode *MakeQnode(char *name, char *description, int price, int price_immediately, int count) //tao 1 Qnode
+Qnode *MakeQnode(int id, char *name, char *description, int price, int price_immediately) //tao 1 Qnode
 {
-    Item *item = MakeItem(name, description, price, price_immediately, count);
+    Item *item = MakeItem(id, name, description, price, price_immediately);
     Qnode *P = (Qnode*)malloc(sizeof(Qnode));
     P->Next = NULL;
     P->item = item;
     return P;
 }
  
-void Push(Queue *Q, char *name, char *description, int price, int price_immediately) //them phan tu vao cuoi Queue
+void Push(Queue *Q, int id, char *name, char *description, int price, int price_immediately) //them phan tu vao cuoi Queue
 {
-    Qnode *P = MakeQnode(name, description, price, price_immediately, Q->count); //Neu Q rong
+    Qnode *P = MakeQnode(id, name, description, price, price_immediately); 
     if (Isempty(Q))
     {
         Q->Front = Q->Rear = P; //dau va cuoi deu tro den P
@@ -45,6 +47,11 @@ void Push(Queue *Q, char *name, char *description, int price, int price_immediat
         Q->Rear = P;
     }
     Q->count ++ ; //tang so phan tu len
+}
+
+void PushItem(Queue *Q, Item *item) //them phan tu vao cuoi Queue
+{
+    Push(Q, item->id, item->name, item->description, item->price, item->price_immediately);
 }
  
 Item *Pop(Queue *Q) //Loai bo phan tu khoi dau hang doi
@@ -66,12 +73,16 @@ Item *Pop(Queue *Q) //Loai bo phan tu khoi dau hang doi
     }
 }
 
+void printItem(Item *item){
+    printf("\t%d %s %s %d %d\n", item->id, item->name, item->description, item->price, item->price_immediately);
+}
+
 void Output(Queue Q)
 {
     Qnode *qnode = Q.Front;
     while (qnode != NULL)
     {
-        printf("%s\n",qnode->item->name);
+        printItem(qnode->item);
         qnode = qnode->Next;
     }
 }

@@ -19,10 +19,15 @@ Room** create_room_list();
 //create a new node 
 //new node will have soluongdangnhapsai=0,islogin=0
 //return new node
-Room *creat_newroom(int id, char* username, Queue *product_list);
+Room *creat_newroom(int id, char* username, Queue *product_list, int number_of_member);
 // add new node to link list
 //head: head of link list,name,password,status: info of newnode
-Room* add_new_room(Room **head, int id, char *username, Queue *product_list);
+Room *add_new_room(Room **head, int id, char *username, Queue *product_list, int number_of_member);
+// bound function of add_new_room
+// add a room node to a roomlist
+Room *add_room(Room **header, Room *room);
+//print all information of a room
+void printRoom(Room *room);
 //print value in a linklist
 //use for debug
 //param:head[IN]:head of link list
