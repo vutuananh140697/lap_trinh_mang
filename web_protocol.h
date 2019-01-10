@@ -95,27 +95,31 @@ int send_room_list(int socket, Room *header);
 int recv_room_list(int socket, Room **header);
 // check error
 int check_error(int a, int b, int c); 
+
 // send message function
 int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
-int receive_REQUEST_ROOM_LIST(int socket, ROOM_LIST_PARAM *param);
-int send_ROOM_LIST(int socket,ROOM_LIST_RESPOND data);
-//int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_RESPOND *data);
-// in all function socket input is socket to communicate,
+int receive_REQUEST_ROOM_LIST(int socket, web_message *message);
+int send_RESPOND_ROOM_LIST(int socket,ROOM_LIST_RESPOND data);
+int receive_RESPOND_ROOM_LIST(int socket, web_message *message);
 
 int send_REQUEST_BUY_NOW(int socket,BUY_NOW_PARAM param);
+int receive_REQUEST_BUY_NOW(int socket, web_message *message);
 int send_RESPOND_BUY_NOW(int socket,BUY_NOW_RESPOND data);
-int receive_REQUEST_BUY_NOW(int socket,BUY_NOW_RESPOND *data);
+int receive_RESPOND_BUY_NOW(int socket, web_message *message);
 
 int send_REQUEST_MAKE_ROOM(int socket,MAKE_ROOM_PARAM param);
+int receive_REQUEST_MAKE_ROOM(int socket, web_message *message);
 int send_RESPOND_MAKE_ROOM(int socket,MAKE_ROOM_RESPOND data);
-int receive_REQUEST_MAKE_ROOM(int socket,MAKE_ROOM_RESPOND *data);
+int receive_RESPOND_MAKE_ROOM(int socket, web_message *message);
 
 int send_REQUEST_ROOM_DETAIL(int socket,ROOM_DETAIL_PARAM param);
+int receive_REQUEST_ROOM_DETAIL(int socket, web_message *message);
 int send_RESPOND_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND data);
-int receive_REQUEST_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND *data);
+int receive_RESPOND_ROOM_DETAIL(int socket, web_message *message);
 
 int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param);
-int send_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data);
-int receive_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND *data);
+int receive_REQUEST_MY_ROOM_LIST(int socket, web_message *message);
+int send_RESPOND_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data);
+int receive_RESPOND_MY_ROOM_LIST(int socket, web_message *message);
 
 #endif
