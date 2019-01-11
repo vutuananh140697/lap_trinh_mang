@@ -9,12 +9,8 @@
 #define CLIENT_MAX 1024
 #define ITEM_NAME 1024
 #define ITEM_DESCRIPTION 1024
-//state of protocol
-enum ProtocolState{
-	still_not_authorzied =0,
-	authorized = 1
-};
-enum message_code{
+
+enum web_message_code{
 	// user id case
 	REQUEST_ROOM_LIST=10,
 	RESPOND_ROOM_LIST=11,
@@ -25,7 +21,7 @@ enum message_code{
 	REQUEST_MAKE_ROOM=30,
 	RESPOND_MAKE_ROOM=31,
 	// room detai
-	REQUEST_ROOM_DETAIL=41,
+	REQUEST_ROOM_DETAIL=40,
 	RESPOND_ROOM_DETAIL=41,
 	// my room list
 	REQUEST_MY_ROOM_LIST=50,
@@ -35,8 +31,8 @@ enum message_code{
 	NOTFOUND=-1
 };
 
-typedef struct message{
-	enum message_code code;
+typedef struct web_message{
+	enum web_message_code code;
 	int data_len;
 	void* data;
 } web_message;
@@ -76,6 +72,7 @@ typedef struct ROOM_DETAIL_PARAM
 }ROOM_DETAIL_PARAM;
 typedef struct ROOM_DETAIL_RESPOND
 {
+	int result;
 	Room *room;
 }ROOM_DETAIL_RESPOND;
 
@@ -121,5 +118,7 @@ int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param);
 int receive_REQUEST_MY_ROOM_LIST(int socket, web_message *message);
 int send_RESPOND_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data);
 int receive_RESPOND_MY_ROOM_LIST(int socket, web_message *message);
+
+int receive_web_message(int socket, web_message *message);
 
 #endif

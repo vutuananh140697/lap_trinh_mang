@@ -11,6 +11,10 @@
 #include "linklist.h"
 #include "tcp.h"
 #include "login_protocol.h"
+#include "queue.h"
+#include "roomlist.h"
+#include "web_protocol.h"
+
 #define BACKLOG 1024   /* Number of allowed connections */
 #define BUFF_SIZE 1024
 const int MAXLENNAME= 200;
@@ -19,12 +23,12 @@ const int MAX_WRONGPASSWORD=2;
 //============================ GLOBAL VARIABLE =================
 Node **database_link_list;
 enum ProtocolState loginProtocolState[BACKLOG];
-enum Auction_ProtocolState[BACKLOG];
+// enum Auction_ProtocolState[BACKLOG];
 
 typedef struct map_socket_to_room_type{
 	Room *room;
 }map_socket_to_room_type;
-map_socket_to_room_type map_socket_to_room;
+
 //============================ FUNCTION =======================
 //load data from account.txt to database_link_list
 
@@ -242,11 +246,28 @@ int main(int argc,char *argv[])
 	// multiplexing info
 	int client[FD_SETSIZE];
 	message msg[FD_SETSIZE];
+	web_message webmsg[FD_SETSIZE];
 	fd_set checkfds_read,checkfds_write,checkfds_exception, readfds, writefds, exceptfds;
 	enum ProtocolState protocol_state[FD_SETSIZE];
 	int maxfd,maxi,i,nready,sockfd;
+	int count;
 
 	Node *user_account[FD_SETSIZE];
+
+	Room **header = create_room_list();
+	Room **my_room[FD_SETSIZE];
+	for(count = 0; count < FD_SETSIZE; count++)
+		my_room[i] = create_room_list();
+
+	Item *item = (Item*)malloc(sizeof(Item));
+	Queue *Q;
+	Q = Init(Q);
+	Room *room;
+
+	// create id 
+	int room_id = 0;
+
+	map_socket_to_room_type map_socket_to_room[FD_SETSIZE];
 
 	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 ){
 		perror("\nError: ");
@@ -405,19 +426,86 @@ int main(int argc,char *argv[])
 
 					 break;
 				case authorized:
-					if(receive_message(sockfd,&msg[i])==-1)
+					if(receive_web_message(sockfd, &webmsg[i]) != 0)
 						{close(sockfd);printf("connect is die\n");return -1;}
-					switch(msg[i].code){
-						case LOGOUT:
-							if(send_LOGOUT_SUCCESS(sockfd)==-1)
+						ROOM_LIST_PARAM *room_list_param;
+						MAKE_ROOM_PARAM *make_room_param;
+						MY_ROOM_LIST_PARAM *my_room_list_param;
+						ROOM_DETAIL_PARAM *room_detail_param;
+						BUY_NOW_PARAM *buy_now_param;
+					switch(webmsg->code){
+						case REQUEST_ROOM_LIST:
+							room_list_param = (ROOM_LIST_PARAM*)webmsg[i].data;
+							// to do if I have many time
+							ROOM_LIST_RESPOND room_list_respond;
+							room_list_respond.header = *header;
+							if(send_RESPOND_ROOM_LIST(sockfd, room_list_respond) != 0)
 								{close(sockfd);printf("connect is die\n");return -1;}
-							protocol_state[i]=no_connect;
-						break;
-						default:
-							if(send_UNKNOWN(sockfd,msg[i])==01)
+
+							break;
+						case REQUEST_ROOM_DETAIL:
+							room_detail_param = (ROOM_DETAIL_PARAM*)webmsg[i].data;
+							ROOM_DETAIL_RESPOND room_detail_respond;
+							Room *searchRoom = search_room(header, room_detail_param->room_id);
+							if(searchRoom == NULL) 
+								room_detail_respond.result = 0;
+							else{
+								room_detail_respond.result = 1;
+								map_socket_to_room[i].room = searchRoom;
+							}
+							room_detail_respond.room = searchRoom;
+							if(send_RESPOND_ROOM_DETAIL(sockfd, room_detail_respond) != 0)
 								{close(sockfd);printf("connect is die\n");return -1;}
-						break;
+							break;
+						case REQUEST_BUY_NOW:
+							buy_now_param = (BUY_NOW_PARAM*)webmsg[i].data;
+							BUY_NOW_RESPOND buy_now_respond;
+							char message_buy_now_respond[1000];
+							Item *search_item = searchItem(*(map_socket_to_room[i].room->product_list), buy_now_param->id);
+							//delete product
+							if(search_item == NULL){
+								strcpy(message_buy_now_respond, "Cannot found product");
+							}else{
+								strcpy(message_buy_now_respond, "Buy successfull");
+							}
+							buy_now_respond.message = message_buy_now_respond;
+							if(send_RESPOND_BUY_NOW(sockfd, buy_now_respond) != 0)
+								{close(sockfd);printf("connect is die\n");return -1;}
+							break;
+						case REQUEST_MAKE_ROOM:
+							make_room_param = (MAKE_ROOM_PARAM*)webmsg[i].data;
+							Room *new_room = add_new_room(header, ++room_id, user_account[i]->name, make_room_param->product_list, 0);
+							add_room(my_room[i], new_room);
+							char mess[1000] = "Create room successfull";
+							MAKE_ROOM_RESPOND make_room_param;
+							make_room_param.message = mess;
+							if(send_RESPOND_MAKE_ROOM(sockfd, make_room_param) != 0)
+								{close(sockfd);printf("connect is die\n");return -1;}
+							break;
+						case REQUEST_MY_ROOM_LIST:
+							my_room_list_param = (MY_ROOM_LIST_PARAM*)webmsg[i].data;
+							MY_ROOM_LIST_RESPOND my_room_list_respond;
+							my_room_list_respond.header = *my_room[i];
+							if(send_RESPOND_ROOM_LIST(sockfd, my_room_list_respond) != 0)
+								{close(sockfd);printf("connect is die\n");return -1;}
+
+							break;
 					}
+
+
+					// if(receive_message(sockfd,&msg[i])==-1)
+					// 	{close(sockfd);printf("connect is die\n");return -1;}
+					// switch(msg[i].code){
+					// 	case LOGOUT:
+					// 		if(send_LOGOUT_SUCCESS(sockfd)==-1)
+					// 			{close(sockfd);printf("connect is die\n");return -1;}
+					// 		protocol_state[i]=no_connect;
+					// 	break;
+					// 	default:
+					// 		if(send_UNKNOWN(sockfd,msg[i])==01)
+					// 			{close(sockfd);printf("connect is die\n");return -1;}
+					// 	break;
+					// }
 					break;
 				}
 		

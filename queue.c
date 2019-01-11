@@ -73,6 +73,16 @@ Item *Pop(Queue *Q) //Loai bo phan tu khoi dau hang doi
     }
 }
 
+Item *searchItem(Queue Q, int id){
+    Qnode *qnode = Q.Front;
+    while(qnode != NULL){
+        if(qnode->item->id == id) 
+            return qnode->item;
+        qnode = qnode->Next;
+    }
+    return NULL;
+}
+
 void printItem(Item *item){
     printf("\t%d %s %s %d %d\n", item->id, item->name, item->description, item->price, item->price_immediately);
 }

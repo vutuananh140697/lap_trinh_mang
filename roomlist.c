@@ -42,6 +42,7 @@ Room *add_room(Room **header, Room *room){
 
 // print all information of a room
 void printRoom(Room *room){
+  if(room == NULL) return;
   printf("%d %s %d\n", room->id, room->username, room->number_of_member);
   Output(*(room->product_list));
 }
