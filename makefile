@@ -6,8 +6,8 @@ main: server client
 	ls
 client:client.o tcp.o login_protocol.o linklist.o queue.o web_protocol.o roomlist.o
 	gcc -o client client.o tcp.o login_protocol.o linklist.o queue.o roomlist.o web_protocol.o
-server:server.o tcp.o login_protocol.o linklist.o queue.o web_protocol.o roomlist.o
-	gcc -o server server.o tcp.o login_protocol.o linklist.o queue.o roomlist.o web_protocol.o
+server:server.o tcp.o login_protocol.o linklist.o queue.o web_protocol.o roomlist.o user_database.o
+	gcc -o server server.o tcp.o login_protocol.o linklist.o queue.o roomlist.o web_protocol.o user_database.o
 
 tcp.o:tcp.c tcp.h
 	gcc -c tcp.c

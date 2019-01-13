@@ -167,7 +167,7 @@ int main(int argc,char *argv[]){
 					do{
 
 						//display some menu
-						printf("MENU:\n1.room list\n9.logout\nchoose:");
+						printf("MENU:\n1.menu\n2.logout\nchoose:");
 						scanf("%d%*c",&choosemenu);
 						switch(choosemenu){
 							case 1:
@@ -267,22 +267,6 @@ int main(int argc,char *argv[]){
 								}
 								break;
 							case 2:
-								BUY_NOW_PARAM buy_now_param;
-								send_REQUEST_BUY_NOW(client_sock,buy_now_param);
-							break;
-							case 3:
-								MAKE_ROOM_PARAM make_room_param;
-							 	send_REQUEST_MAKE_ROOM(client_sock,make_room_param);
-							break;
-							case 4:
-								ROOM_DETAIL_PARAM room_detail_param;
-								send_REQUEST_ROOM_DETAIL(client_sock,room_detail_param);
-							break;
-							case 5:
-								MY_ROOM_LIST_PARAM my_room_list_param;
-								send_REQUEST_MY_ROOM_LIST(client_sock,my_room_list_param);
-							break;
-							case 9:
 							//send logout request
 								if(send_LOGOUT(client_sock)==-1)
 									{close(client_sock);printf("connect is die\n");return -1;}

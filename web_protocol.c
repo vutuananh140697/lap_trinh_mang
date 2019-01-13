@@ -129,8 +129,10 @@ int recv_room_list(int socket, Room **header){
 }
 
 int check_error(int a, int b, int c){
-	if(a==-1 || b==-1 ||c==-1)
+	if(a==-1 || b==-1 ||c==-1){
+		// printf("%d %d %d\n",a,b,c );
 		return -1;
+	}
 	return 0;
 }
 
@@ -146,7 +148,9 @@ int receive_REQUEST_ROOM_LIST(int socket, web_message *message){
 	ROOM_LIST_PARAM *param = (ROOM_LIST_PARAM*)malloc(sizeof(ROOM_LIST_PARAM));
 	// int a = recv_a_int(socket, &message->code);
 	int b = recv_a_int(socket, &message->data_len);
+	printf("b ok \n");
 	int c = recv_a_int(socket, &param->page_id);
+	printf("c ok \n");
 	message->data = param;
 	return check_error(0, b, c);
 }
@@ -271,28 +275,28 @@ int receive_RESPOND_ROOM_DETAIL(int socket, web_message *message){
 	return check_error(0, b, 0);
 }
 
-int send_room_list(int socket, Room *header, int room_length){
-  if(send_a_int(socket, room_length) != 0)
-    return -1;
-  while(header != NULL){
-    if(send_a_int(socket, header->id) != 0) 
-      return -1;
-    if(send_a_string(socket, header->username) != 0)
-      return -1;
-    if(send_a_queue(socket, header->product_list) != 0)
-      return -1;
-    return 0;
-  }
+// int send_room_list(int socket, Room *header, int room_length){
+//   if(send_a_int(socket, room_length) != 0)
+//     return -1;
+//   while(header != NULL){
+//     if(send_a_int(socket, header->id) != 0) 
+//       return -1;
+//     if(send_a_string(socket, header->username) != 0)
+//       return -1;
+//     if(send_a_queue(socket, header->product_list) != 0)
+//       return -1;
+//     return 0;
+//   }
 
-  int send_a_queue(int socket, Queue *first){
-    while(first != NULL){
-      if(send_all_byte(socket, first->item) != 0)
-        return -1;
-      first = first->Next;
-    }
-    return 0;
-  }
-}
+//   int send_a_queue(int socket, Queue *first){
+//     while(first != NULL){
+//       if(send_all_byte(socket, first->item) != 0)
+//         return -1;
+//       first = first->Next;
+//     }
+//     return 0;
+//   }
+// }
 
 
 
@@ -332,7 +336,9 @@ int receive_web_message(int socket, web_message *message){
 	int b = -1;
 	switch(message->code){
 		case REQUEST_ROOM_LIST:
+			// printf("REQUEST_ROOM_LIST reviece\n");
 			b = receive_REQUEST_ROOM_LIST(socket, message);
+			// printf("REQUEST_ROOM_LIST reviece end \n");
 			break;
 		case RESPOND_ROOM_LIST:
 			b = receive_RESPOND_ROOM_LIST(socket, message);
@@ -364,5 +370,8 @@ int receive_web_message(int socket, web_message *message){
 		default:
 			break;
 	}
-	return check_error(a, b, 0);
+	// printf("switch case success\n");
+	int ans = check_error(a, b, 0);
+	// printf("ans %d\n",ans);
+	return ans;
 }

@@ -13,6 +13,7 @@ enum Web_ProtocolState{
 };
 typedef struct Web_Data{
 	int user_id;
+	Room* room;
 }Web_Data;
 #define USERNAME 1024
 #define CLIENT_MAX 1024

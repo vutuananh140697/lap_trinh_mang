@@ -37,7 +37,9 @@ Room* add_new_room(Room **head, int id, char *username, Queue *product_list, int
 
 }
 Room *add_room(Room **header, Room *room){
-  return add_new_room(header, room->id, room->username, room->product_list, room->number_of_member);
+  printRoom(room);
+  Room * ans=add_new_room(header, room->id, room->username, room->product_list, room->number_of_member);
+  return ans;
 }
 
 // print all information of a room
