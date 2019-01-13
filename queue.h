@@ -2,7 +2,9 @@
 #define __QUEUE__
 #include <stdio.h>
 #include<stdlib.h>
+#include <time.h>
 #include <string.h>
+#include "linklist.h"
 typedef struct Item
 {
 	int id;
@@ -10,6 +12,8 @@ typedef struct Item
 	char *description;
 	int price;
 	int price_immediately;
+	time_t start;
+	Node *best_user;
 } Item;
 typedef struct Qnode
 {

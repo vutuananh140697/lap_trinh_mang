@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "linklist.h"
 #include "queue.h"
-
+#include <time.h>
 typedef struct Room {
 	int id;
 char *username;

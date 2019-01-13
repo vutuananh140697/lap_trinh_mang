@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-
+#include <time.h>
 #include "linklist.h"
 #include "tcp.h"
 
@@ -332,6 +332,9 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int sockfd,
 		}
 		else{
 			item->price=price;
+			item->start=time(NULL);
+			item->best_user=(session->login_data).user;
+
 			send_RESPOND_SET_PRICE(socket,data);
 			for(int i=0;i<FD_SETSIZE;i++){
 				if((all_sesssion[i].auction_data).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==auction_protocol){
@@ -376,6 +379,7 @@ int main(int argc,char *argv[])
 	
 	//protocol
 	int code;
+	time_t start_time;
 	// multiplexing info
 	int client[FD_SETSIZE];
 	// message msg[FD_SETSIZE];
@@ -386,7 +390,7 @@ int main(int argc,char *argv[])
 	enum Login_ProtocolState loginProtocolState[BACKLOG];
 	int maxfd,maxi,i,nready,sockfd;
 	int count;
-
+	Item *item;
 	Node *user_account[FD_SETSIZE];
 
 	listenfd=init_new_listen_socket(PORT);
@@ -488,13 +492,41 @@ int main(int argc,char *argv[])
 				auction_protocol_handle(session[i],session,protocol_state[i],client[i],&readfds,&writefds,&exceptfds);
 				
 			}
-		
-
-
-
 			if (--nready < 0)
 				break;		/* no more readable descriptors */
 		}
+
+
+		Room *top=(*head);
+
+		while(top!=NULL){
+			item=top->product_list->Front->item;
+			start_time=item.start;
+			if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
+				for(int i=0;i<FD_SETSIZE;i++){
+					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+					}
+				}	
+			}
+			if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
+				for(int i=0;i<FD_SETSIZE;i++){
+					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+					}
+				}	
+			}
+			if(time(NULL)-start_time>=9){
+				send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
+				for(int i=0;i<FD_SETSIZE;i++){
+					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+					}
+				}	
+			}
+			top=top->next;
+		}
+
 
 
 
