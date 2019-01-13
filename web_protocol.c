@@ -26,8 +26,10 @@ int receive_web_message(int socket,web_message *msg){
 int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param){
 	web_message msg;
 	msg.code = REQUEST_ROOM_LIST;
-	msg.data_len = sizeof(ROOM_LIST_PARAM);
-	msg.data = &param;
+	int a=param.page_id;
+	// char *strinng=;
+	msg.data_len = sizeof(a);
+	msg.data = &a;
 	return send_web_message(socket, msg);
 }
 
@@ -117,26 +119,50 @@ int receive_REQUEST_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND *data){
 	return recv;
 }
 
-int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param){
-	web_message msg;
-	msg.code = ;
-	msg.data_len = sizeof(MY_ROOM_LIST_PARAM);
-	msg.data = &param;
-	return send_web_message(socket, msg);
+int send_room_list(int socket, Room *header, int room_length){
+  if(send_a_int(socket, room_length) != 0)
+    return -1;
+  while(header != NULL){
+    if(send_a_int(socket, header->id) != 0) 
+      return -1;
+    if(send_a_string(socket, header->username) != 0)
+      return -1;
+    if(send_a_queue(socket, header->product_list) != 0)
+      return -1;
+    return 0;
+  }
+
+  int send_a_queue(int socket, Queue *first){
+    while(first != NULL){
+      if(send_all_byte(socket, first->item) != 0)
+        return -1;
+      first = first->Next;
+    }
+    return 0;
+  }
 }
 
-int send_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data){
-	web_message msg;
-	msg.code = ;
-	msg.data_len = sizeof(MY_ROOM_LIST_RESPOND);
-	msg.data = &param;
-	return send_web_message(socket, msg);
-}
 
-int receive_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND *data){
-	web_message *msg;
-	int recv = receive_web_message(socket, msg);
-	data = msg->data;
-	return recv;
-}
+// int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param){
+// 	web_message msg;
+// 	msg.code = REQUEST_MY_ROOM_LIST
+// 	msg.data_len = sizeof(MY_ROOM_LIST_PARAM);
+// 	msg.data = &param;
+// 	return send_web_message(socket, msg);
+// }
+
+// int send_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data){
+// 	web_message msg;
+// 	msg.code = MY_ROOM_LIST
+// 	msg.data_len = sizeof(MY_ROOM_LIST_RESPOND);
+// 	msg.data = &param;
+// 	return send_web_message(socket, msg);
+// }
+
+// int receive_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND *data){
+// 	web_message *msg;
+// 	int recv = receive_web_message(socket, msg);
+// 	data = msg->data;
+// 	return recv;
+// }
 

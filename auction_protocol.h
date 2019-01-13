@@ -8,8 +8,8 @@
 #define NUMBER_NOTIFY 3;
 //state of protocol
 enum Auction_ProtocolState{
-	no_set_price =0,//still not receive user id
-	have_set_price =1,// receive user id and waiting for password
+	no_set_price_or_passed =0,// this user still not set price or his price is smaller than some one
+	first_price =1,// receive user id and waiting for password
 	final_temp_set_price =2,
 	final_set_price =3,
 };
@@ -19,11 +19,11 @@ typedef struct Auction_Data{
 } Auction_Data;
 enum auction_message_code{
 	//auction
-	REQUEST_NEW_PRICE=40,
 	REQUEST_SET_PRICE=41,
 	RESPOND_SET_PRICE=42,
 
-	//enter room:
+	//notify:
+	NOTIFY_NEW_PRICE=43,
 	
 	//Exit room
 	REQUEST_EXIT_ROOM =50,
@@ -45,6 +45,6 @@ int receive_auction_message(int socket,auction_message *msg);
 // send message function
 // in all function socket input is socket to communicate,
 
-int send_ENTER_ROOM();
-int send_SET_PRICE();
+int send_REQUEST_SET_PRICE(int socket,int newprice);
+
 #endif

@@ -6,8 +6,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "roomlist.h"
 #include "linklist.h"
 #include "login_protocol.h"
+#include "web_protocol.h"
 #include "tcp.h"
 
 #define BUFF_SIZE 8192
@@ -79,6 +81,7 @@ int main(int argc,char *argv[]){
 	int choosemenu;
 	int choose;
 	int enter_room;
+	int page_id;
 
 	//get server info
 	strcpy(SERVER_ADDR,argv[1]);
@@ -154,29 +157,44 @@ int main(int argc,char *argv[]){
 			//if passsword is right
 			if(msg.code==PASSWORD_RIGHT){
 					do{
+
 						//display some menu
-						printf("MENU:\n1.developing function\n2.logout:");
+						printf("MENU:\n1.room list\n9.logout\nchoose:");
 						scanf("%d%*c",&choosemenu);
 						switch(choosemenu){
 							case 1:
 								//printf("some funny function will be here soon\n");
 
-								printf("Nhap lua chon: \n");
-								scanf("%d", &choose);
-								if(choose == 1){
-									ROOM_LIST_PARAM
-									if(send_REQUEST_ROOM_LIST(client_sock, 0) == -1)
-										{printf("connect is die\n");return -1;}
-									ROOM_LIST_RESPOND msg;
-									if(receive_REQUEST_ROOM_LIST(client_sock, msg) == -1)
-										{printf("connect is die\n");return -1;}
-
-								}
-								else if(choose == 2){
+								printf("Nhap trang: ");
+								scanf("%d", &page_id);
+								if(choosemenu == 1){
+									ROOM_LIST_PARAM param;
+									param.page_id=page_id;
+									send_REQUEST_ROOM_LIST(client_sock, param);
+									// printf("send: ");
+									// ROOM_LIST_PARAM room_list;
+									// receive_REQUEST_ROOM_LIST(client_sock,&room_list);
+									// print_all_room(&room_list);
 
 								}
 								break;
 							case 2:
+								BUY_NOW_PARAM buy_now_param;
+								send_REQUEST_BUY_NOW(client_sock,buy_now_param);
+							break;
+							case 3:
+								MAKE_ROOM_PARAM make_room_param;
+							 	send_REQUEST_MAKE_ROOM(client_sock,make_room_param);
+							break;
+							case 4:
+								ROOM_DETAIL_PARAM room_detail_param;
+								send_REQUEST_ROOM_DETAIL(client_sock,room_detail_param);
+							break;
+							case 5:
+								MY_ROOM_LIST_PARAM my_room_list_param;
+								send_REQUEST_MY_ROOM_LIST(client_sock,my_room_list_param);
+							break;
+							case 9:
 							//send logout request
 								if(send_LOGOUT(client_sock)==-1)
 									{close(client_sock);printf("connect is die\n");return -1;}
@@ -198,24 +216,25 @@ int main(int argc,char *argv[]){
 								break;
 						}
 					}while(choosemenu!=2);
-				}
+				
 		}
 		
 	}
+}
 		
 	close(client_sock);
 
 	// send user id
-	send_USERID(client_sock,"huy");
+	// send_USERID(client_sock,"huy");
 
-	//receive message
+	// //receive message
 
-	receive_message(client_sock,&msg);
-	// //send password
-	send_PASSWORD(client_sock,"1");
-	//receive message
-	receive_message(client_sock,&msg);
-	printf("%s",(char *)msg.data);
+	// receive_message(client_sock,&msg);
+	// // //send password
+	// send_PASSWORD(client_sock,"1");
+	// //receive message
+	// receive_message(client_sock,&msg);
+	// printf("%s",(char *)msg.data);
 
 
 	// int choose;
@@ -275,9 +294,6 @@ int main(int argc,char *argv[]){
 
 
 
-
-	}
-	
 		
 	return 0;
 }

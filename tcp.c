@@ -198,25 +198,3 @@ int check_if_a_file_exist(char *filename){
 
 }
 
-int send_room_list(int socket, roomlist *header, int room_length){
-  if(send_a_int(socket, room_length) != 0)
-    return -1;
-  while(header != NULL){
-    if(send_a_int(socket, header->room_id) != 0) 
-      return -1;
-    if(send_a_string(socket, header->username) != 0)
-      return -1;
-    if(send_a_queue(socket, header->product_list) != 0)
-      return -1;
-    return 0;
-  }
-
-  int send_a_queue(int socket, Queue *first){
-    while(first != NULL){
-      if(send_all_byte(socket, first->item) != 0)
-        return -1;
-      first = first->Next;
-    }
-    return 0;
-  }
-}

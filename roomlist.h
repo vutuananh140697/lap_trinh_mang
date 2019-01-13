@@ -6,10 +6,10 @@
 #include "queue.h"
 
 typedef struct Room {
-struct Room *next;
-int id;
-char *username;
-Queue *product_list;
+	struct Room *next;
+	int id;
+	char *username;
+	Queue *product_list;
 } Room;
 
 //create a link list
@@ -36,4 +36,5 @@ Room *search_room(Room **head, int id);
 void delete_room(Room **head, int id);
 //free a list to releash memory
 void free_room_list(Room **head);
+int send_room_list(int socket, Room *header, int room_length);
 #endif

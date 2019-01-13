@@ -42,7 +42,7 @@ void print_all_room(Room **head){
 
   Room *top=(*head);
   while(top!=NULL){
-    printf("");
+    printf("hahah");
     top=top->next;
   }
 }
@@ -100,3 +100,4 @@ void free_room_list(Room **head){
     }
   (*head)=NULL;
 }
+

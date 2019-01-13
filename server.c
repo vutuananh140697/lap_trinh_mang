@@ -198,6 +198,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 	int code;
 	switch(session->login_state){
 					case no_connect:
+							printf("id handle\n");
 							if (FD_ISSET(sockfd, readfds)) {
 								receive_message(sockfd,&msg);
 								switch(msg.code){
@@ -232,7 +233,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 							}
 						break;
 					case correct_id:
-
+						printf("password handle\n");
 						if(receive_message(sockfd,&msg)==-1)
 						{close(sockfd);printf("connect is die\n");return -1;}
 						if(msg.code==PASSWORD){
@@ -244,6 +245,8 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 								FD_CLR(sockfd,checkfds_write);
 								FD_SET(sockfd,checkfds_read);
 								(session->login_data).user->soluongdangnhapsai=0;
+								session->protocol_group_id=web_protocol;
+								session->web_state=wbe_authorized;
 							}
 							else{
 								if(strcmp("q",(char*)msg.data)!=0){
@@ -297,32 +300,51 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 					}
 }
 int web_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *writefds,fd_set *exceptfds,fd_set *checkfds_read,fd_set *checkfds_write){
-	// web_message msg;
-	// switch(session->web_state){
-	// 	case web_not_authorzied:
-	// 		break;
-	// 	case wbe_authorized:
-	// 		receive_web_message(msg);
-	// 		switch(msg.code){
-	// 			case REQUEST_ROOM_LIST:
-	// 				//get parame
-	// 				//get room list
-	// 				ROOM_LIST_RESPOND data;
-	// 				send_ROOM_LIST(sockfd, data);
-	// 			break;
-	// 			case REQUEST_BUY_NOW:
-	// 				ROOM_LIST_RESPOND data;
-	// 				send_RESPOND_BUY_NOW(int socket,ROOM_LIST_RESPOND data);
-	// 			break;
-	// 			case REQUEST_MAKE_ROOM:
-	// 			break;
-	// 			case REQUEST_ROOM_DETAIL:
-	// 			break;
-	// 			case REQUEST_MY_ROOM_LIST:
-	// 			break;
-	// 		}
-	// 		break;
-	// }
+	web_message msg;
+	BUY_NOW_RESPOND data;
+	ROOM_LIST_RESPOND room_list_respond;
+	// printf("xu ly web\n");
+	// return 0;
+	switch(session->web_state){
+		case web_not_authorzied:
+			break;
+		case wbe_authorized:
+			receive_web_message(sockfd,&msg);
+			printf("%d\n",msg.code );
+			switch(msg.code){
+				case REQUEST_ROOM_LIST:
+					printf("lay cac room list%d\n",msg.code );
+					printf("lay ra danh sach cac phong : %d\n",*((int*)msg.data) );
+					//get parame
+					int page_id=*(int*)(msg.data);
+
+					// printf("%d\n", page_id);
+					// //get room list
+					// int room_id[3]={1,2,3};
+					// char maker_names[3][20]={"hahah","hello"};
+					// char descriptions[3][200]={"Clinton","Bush","Obama" };
+					// room_list_respond.room_ids=room_id;
+					// room_list_respond.name_of_makers=maker_names;
+					// room_list_respond.descriptions=descriptions;
+					// send_ROOM_LIST(sockfd, room_list_respond);
+				break;
+				case REQUEST_BUY_NOW:
+				
+					//msg.data=>id
+					// send_RESPOND_BUY_NOW(sockfd,dsata);
+				break;
+				case REQUEST_MAKE_ROOM:
+					//msg.data=>queue cac san pham;
+				break;
+				case REQUEST_ROOM_DETAIL:
+				// id room
+				break;
+				case REQUEST_MY_ROOM_LIST:
+				// id user
+				break;
+			}
+			break;
+	}
 
 }
 int auction_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *writefds,fd_set *exceptfds,fd_set *checkfds_read,fd_set *checkfds_write){
@@ -332,6 +354,9 @@ int auction_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set 
 
 int main(int argc,char *argv[])
 {
+
+
+	//
 	validate_input(argc,argv);
 	load_data_base();
 
@@ -418,14 +443,19 @@ int main(int argc,char *argv[])
 			continue;
 		switch(session[i].protocol_group_id){
 			case login_protocol:{
+				printf("xu ly login_protocol\n");
 				login_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
+				printf("ket thuc login_protocol%d\n", session[i].protocol_group_id);
+				FD_SET(client[i], &checkfds_read);
 				break;
 			}
 			case web_protocol:{
+				printf("xu ly web_protocol\n");
 				web_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
 				break;
 			}
 			case auction_protocol:{
+				printf("xu ly auction_protocol\n");
 				// auction_protocol_handle(protocol_state[i],client[i],&readfds,&writefds,&exceptfds);
 				break;
 			}

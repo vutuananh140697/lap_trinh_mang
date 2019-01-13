@@ -29,5 +29,5 @@ Qnode *MakeQnode(char *name, char *description, int price, int price_immediately
 void Push(Queue *Q, char *name, char *description, int price, int price_immediately); //them phan tu vao cuoi hang doi
 Item *Pop(Queue *Q); //Loai bo phan tu khoi dau hang doi
 void Output(Queue Q); //Xuat 
-
+// int send_a_queue(int socket, Queue *item);
 #endif
