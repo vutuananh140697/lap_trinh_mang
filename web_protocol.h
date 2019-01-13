@@ -35,7 +35,12 @@ enum web_message_code{
 	// my room list
 	REQUEST_MY_ROOM_LIST=50,
 	RESPOND_MY_ROOM_LIST=51,
+	//ENTER_ROOM
+	ENTER_ROOM=60,
 
+	//
+	REQUEST_LOGOUT =70,
+	RESPOND_LOGOUT = 71,
 	//unknow
 	LOGIC_NOTFOUND=-1
 };

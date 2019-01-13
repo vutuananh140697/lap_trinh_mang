@@ -60,6 +60,18 @@ int recv_a_string(int socket,char buff[]){
   return -1;
 		
 }
+int recv_a_time_t(int socket,time_t *result){
+  time_t value=0;
+  char buff_temp[SOCKET_MAXIMUM_BUFFER];
+  if(recv_all_byte(socket,buff_temp,sizeof(time_t))!=0)
+    {
+      return -1;
+    }
+
+  memcpy(&value,buff_temp,sizeof(time_t));
+  *result=value>>0;
+  return 0;
+}
 // receive a file from socket
 int recv_a_file(int socket,char *path){
 
@@ -135,6 +147,11 @@ int send_a_int(int socket,int value){
   memcpy(buff,&value,sizeof(int));
   return send_all_byte(socket,buff,sizeof(int));
 
+}
+int send_a_time_t(int socket,time_t value){
+  char buff[sizeof(time_t)];
+  memcpy(buff,&value,sizeof(time_t));
+  return send_all_byte(socket,buff,sizeof(time_t));
 }
 // send a string to socket
 int  send_a_string(int socket,char *str){

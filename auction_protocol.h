@@ -1,6 +1,7 @@
 #ifndef __AUCTION_PROTOCOL__
 #define __AUCTION_PROTOCOL__
 #include "tcp.h"
+#include "roomlist.h"
 #include <string.h>
 #include <stdlib.h>
 #define MAXUSERID 200;
@@ -25,24 +26,20 @@ enum auction_message_code{
 	REQUEST_SET_PRICE=41,
 	RESPOND_SET_PRICE=42,
 
+
 	//notify:
 	NOTIFY_NEW_PRICE=43,
-	NOTIFY_ONE_TIME_PRICE=44,
-	NOTIFY_TWO_TIME_PRICE=45,
-	NOTIFY_THREE_TIME_PRICE=46,
-	NOTIFY_FINAL_TIME_PRICE=47,
-	
-	//notify 
-	NOTIFY_ENDR_ROOM=50
-	NOTIFY_NEXT_ITEM=51
+	//enter room 
+	// NOTIFY_ENTER_ROOM=50
+	// NOTIFY_NEXT_ITEM=51
 	//Exit room
-	REQUEST_EXIT_ROOM =50,
-	RESPOND_EXIT_ROOM =51,
+	REQUEST_EXIT_ROOM =60,
+	RESPOND_EXIT_ROOM =61,
 
 	//Buy now
-	REQUEST_BUY_NOW=20,
-	RESPOND_BUY_NOW=21,
-	RESPOND_BUY_NOW_NOTIFY=22
+	AUCTION_REQUEST_BUY_NOW=20,
+	AUCTION_RESPOND_BUY_NOW=21,
+	AUCTION_RESPOND_BUY_NOW_NOTIFY=22,
 	
 
 
@@ -74,27 +71,50 @@ typedef struct SET_PRICE_RESPOND
 }SET_PRICE_RESPOND;
 
 //============== NOTIFY_NEW =============//
-typedef struct NOTIFY_NEW_PRICE_PARAM
-{
-	int page_id;
-}NOTIFY_NEW_PRICE_PARAM;
+
 typedef struct NOTIFY_NEW_PRICE_RESPOND
 {
-	Room *header;
+	int newprice;
+	char *winner_name;
+	time_t start;
+	int count;
 }NOTIFY_NEW_PRICE_RESPOND;
 //============== REQUEST_EXIT =============//
 typedef struct REQUEST_EXIT_PARAM
 {
-	int page_id;
 }REQUEST_EXIT_PARAM;
-typedef struct REQUEST_EXIT_RESPOND
+typedef struct EXIT_ROOM_RESPOND
 {
-	Room *header;
-}REQUEST_EXIT_RESPOND;
+	char *message;
+}EXIT_ROOM_RESPOND;
 
-int send_REQUEST_SET_PRICE(int socket,int newprice);
+//============== BUY_NOW =============//
+typedef struct AUCTION_BUY_NOW_PARAM
+{
+	int item_id;
+	int price;
+}AUCTION_BUY_NOW_PARAM;
+typedef struct AUCTION_BUY_NOW_RESPOND
+{
+	int item_id;
+	char *message;
+}AUCTION_BUY_NOW_RESPOND;
+typedef struct AUCTION_BUY_NOW_NOTIFY_RESPOND
+{
+	int item_id;
+	char *winner_name;
+}AUCTION_BUY_NOW_NOTIFY_RESPOND;
+
+int send_REQUEST_SET_PRICE(int socket,SET_PRICE_PARAM data);
 int send_RESPOND_SET_PRICE(int socket,SET_PRICE_RESPOND data);
-int send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
-int send_AUCTION_UNKNOWN(int socket);
 
+int send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
+
+int send_REQUEST_EXIT_ROOM(int socket,REQUEST_EXIT_PARAM data);
+int send_RESPOND_EXIT_ROOM(int socket,EXIT_ROOM_RESPOND data);
+
+int send_AUCTION_REQUEST_BUY_NOW(int socket,AUCTION_BUY_NOW_PARAM data);
+int send_AUCTION_RESPOND_BUY_NOW(int socket,AUCTION_BUY_NOW_RESPOND data);
+int send_AUCTION_RESPOND_BUY_NOW_NOTIFY(int socket,AUCTION_BUY_NOW_NOTIFY_RESPOND data);
+int send_AUCTION_UNKNOWN(int socket);
 #endif

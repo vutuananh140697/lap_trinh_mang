@@ -13,6 +13,7 @@ typedef struct Item
 	int price;
 	int price_immediately;
 	time_t start;
+	int count;
 	Node *best_user;
 } Item;
 typedef struct Qnode

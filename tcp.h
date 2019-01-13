@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include<time.h>
 #define SOCKET_MAXIMUM_BUFFER 1024
 #define FILE_EXIST_ERROR "Error File Exist:"
 #define OK "OK"
@@ -17,11 +18,13 @@ int recv_all_byte(int socket,void *buff,int byte_size);
 
 int recv_a_int(int socket,int *result);
 int recv_a_string(int socket,char buff[]);
+int recv_a_time_t(int socket,time_t *time);
 
 int recv_a_file(int socket,char *path);
 int send_a_file(int socket,char *filename);
 int send_all_byte(int socket,void *buff,int number_byte_to_send);
 int send_a_int(int socket,int value);
+int send_a_time_t(int socket,time_t time);
 int send_a_string(int socket,char *str);
 int check_if_a_file_exist(char *filename);
 
