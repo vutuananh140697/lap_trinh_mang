@@ -1,24 +1,16 @@
-#ifndef __WEB_PROTOCOL__
-#define __WEB_PROTOCOL__
+#ifndef __LOGIN_PROTOCOL__
+#define __LOGIN_PROTOCOL__
 #include "tcp.h"
-#include "queue.h"
 #include "roomlist.h"
 #include <string.h>
 #include <stdlib.h>
 #define MAXUSERID 200;
 //state of protocol
-enum Web_ProtocolState{
-	web_not_authorzied =0,
-	wbe_authorized = 1
+enum ProtocolState{
+	still_not_authorzied =0,
+	authorized = 1
 };
-typedef struct Web_Data{
-	int user_id;
-}Web_Data;
-#define USERNAME 1024
-#define CLIENT_MAX 1024
-#define ITEM_NAME 1024
-#define ITEM_DESCRIPTION 1024
-enum web_message_code{
+enum message_code{
 	// user id case
 	REQUEST_ROOM_LIST=10,
 	RESPOND_ROOM_LIST=11,
@@ -29,19 +21,18 @@ enum web_message_code{
 	REQUEST_MAKE_ROOM=30,
 	RESPOND_MAKE_ROOM=31,
 	// room detai
-	REQUEST_ROOM_DETAIL=40,
+	REQUEST_ROOM_DETAIL=41,
 	RESPOND_ROOM_DETAIL=41,
 	// my room list
 	REQUEST_MY_ROOM_LIST=50,
 	RESPOND_MY_ROOM_LIST=51,
 
 	//unknow
-	LOGIC_NOTFOUND=-1
+	NOTFOUND=-1
 };
 
-
-typedef struct web_message{
-	enum web_message_code code;
+typedef struct message{
+	enum message_code code;
 	int data_len;
 	void* data;
 } web_message;
@@ -81,53 +72,48 @@ typedef struct ROOM_DETAIL_PARAM
 }ROOM_DETAIL_PARAM;
 typedef struct ROOM_DETAIL_RESPOND
 {
-	int result;
 	Room *room;
 }ROOM_DETAIL_RESPOND;
 
 typedef ROOM_LIST_PARAM MY_ROOM_LIST_PARAM;
 typedef ROOM_LIST_RESPOND MY_ROOM_LIST_RESPOND;
 //core function
-int send_a_item(int socket, Item *item);
-int recv_a_item(int socket, Item *item);
-
-// int send_web_message(int socket,web_message msg);
-// int receive_web_message(int socket,web_message *msg);
-int send_a_queue(int socket, Queue *Q);
-int recv_a_queue(int socket, Queue *Q);
+int send_web_message(int socket,web_message msg);
+int receive_web_message(int socket,web_message *msg);
+int send_room_list(int socket, Room *header, int room_length);
+int recv_room_list(int socket, Room *header, int room_length);
 int send_a_room(int socket, Room *room);
-int recv_a_room(int socket, Room *room);
-int send_room_list(int socket, Room *header);
-int recv_room_list(int socket, Room **header);
-// check error
-int check_error(int a, int b, int c); 
-
+int receive_a_room(int socket, Room *room);
+int send_a_queue(int socket, Queue *item);
+int recv_room_list(int socket, Room *header);
 // send message function
 int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param);
-int receive_REQUEST_ROOM_LIST(int socket, web_message *message);
-int send_RESPOND_ROOM_LIST(int socket,ROOM_LIST_RESPOND data);
-int receive_RESPOND_ROOM_LIST(int socket, web_message *message);
+int send_ROOM_LIST(int socket,ROOM_LIST_RESPOND data);
+int receive_REQUEST_ROOM_LIST(int socket,ROOM_LIST_RESPOND *data);
+// in all function socket input is socket to communicate,
+
+
 
 int send_REQUEST_BUY_NOW(int socket,BUY_NOW_PARAM param);
-int receive_REQUEST_BUY_NOW(int socket, web_message *message);
 int send_RESPOND_BUY_NOW(int socket,BUY_NOW_RESPOND data);
-int receive_RESPOND_BUY_NOW(int socket, web_message *message);
+int receive_REQUEST_BUY_NOW(int socket,BUY_NOW_RESPOND *data);
+
+
 
 int send_REQUEST_MAKE_ROOM(int socket,MAKE_ROOM_PARAM param);
-int receive_REQUEST_MAKE_ROOM(int socket, web_message *message);
 int send_RESPOND_MAKE_ROOM(int socket,MAKE_ROOM_RESPOND data);
-int receive_RESPOND_MAKE_ROOM(int socket, web_message *message);
+int receive_REQUEST_MAKE_ROOM(int socket,MAKE_ROOM_RESPOND *data);
+
 
 int send_REQUEST_ROOM_DETAIL(int socket,ROOM_DETAIL_PARAM param);
-int receive_REQUEST_ROOM_DETAIL(int socket, web_message *message);
 int send_RESPOND_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND data);
-int receive_RESPOND_ROOM_DETAIL(int socket, web_message *message);
+int receive_REQUEST_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND *data);
+
 
 int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param);
-int receive_REQUEST_MY_ROOM_LIST(int socket, web_message *message);
-int send_RESPOND_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data);
-int receive_RESPOND_MY_ROOM_LIST(int socket, web_message *message);
+int send_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data);
+int receive_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND *data);
 
-int receive_web_message(int socket, web_message *message);
+
 
 #endif

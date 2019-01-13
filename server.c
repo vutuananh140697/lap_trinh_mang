@@ -17,6 +17,8 @@
 
 #include "user_database.h"
 #include "roomlist.h"
+#include "queue.h"
+
 #define BACKLOG 1024   /* Number of allowed connections */
 #define MAX_WRONGPASSWORD 3
 #define BUFF_SIZE 1024
@@ -44,6 +46,44 @@ typedef struct SESSION
 	Web_Data web_data;
 }SESSION;
 
+enum ProtocolState loginProtocolState[BACKLOG];
+// enum Auction_ProtocolState[BACKLOG];
+
+typedef struct map_socket_to_room_type{
+	Room *room;
+}map_socket_to_room_type;
+
+//============================ FUNCTION =======================
+//load data from account.txt to database_link_list
+
+void load_data_base(){
+  database_link_list=create_link_list();
+  FILE *fin=(FILE *)fopen("account.txt","r");
+  if(fin==NULL){
+    printf("Don't exist file contain database\n");
+    exit(1);
+    return ;
+  }
+  char name[MAXLENNAME],password[MAXLENPASSWORD];
+  int status=-1;
+  while(fscanf(fin,"%s%*c%s%*c%d%*c",name,password,&status),!feof(fin)){
+    
+    add_new_node(database_link_list,strdup(name),strdup(password),status);
+    //printf("%s,%s,%d\n",name,password,status);
+  }
+  fclose(fin);
+}
+//export data from database_link_list to account.txt
+void export_to_data_file(){
+  Node *top=(*database_link_list);
+  FILE* fout=fopen("account.txt","w");
+  while(top!=NULL){
+    fprintf(fout,"%s %s %d\n",top->name,top->password,top->status);
+    top=top->next;
+  }
+  fclose(fout);
+}
+//check all character in string s is number or not
 int numbers_only(char *s)
 {
   int i=0;
@@ -374,16 +414,52 @@ int main(int argc,char *argv[])
 	int code;
 	// multiplexing info
 	int client[FD_SETSIZE];
-	// message msg[FD_SETSIZE];
+	message msg[FD_SETSIZE];
+	web_message webmsg[FD_SETSIZE];
 	fd_set checkfds_read,checkfds_write,checkfds_exception, readfds, writefds, exceptfds;
 	// enum ProtocolState protocol_state[FD_SETSIZE][2];
 	SESSION session[FD_SETSIZE];
 
 	int maxfd,maxi,i,nready,sockfd;
+	int count;
 
 	Node *user_account[FD_SETSIZE];
 
 	listenfd=init_new_listen_socket(PORT);
+	Room **header = create_room_list();
+	Room **my_room[FD_SETSIZE];
+	for(count = 0; count < FD_SETSIZE; count++)
+		my_room[i] = create_room_list();
+
+	Item *item = (Item*)malloc(sizeof(Item));
+	Queue *Q;
+	Q = Init(Q);
+	Room *room;
+
+	// create id 
+	int room_id = 0;
+
+	map_socket_to_room_type map_socket_to_room[FD_SETSIZE];
+
+	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 ){
+		perror("\nError: ");
+		return 0;
+	}
+	
+	bzero(&server, sizeof(server));
+	server.sin_family = AF_INET;         
+	server.sin_port = htons(PORT);   
+	server.sin_addr.s_addr = htonl(INADDR_ANY);  
+	if(bind(listenfd, (struct sockaddr*)&server, sizeof(server))==-1){ 
+		perror("\nError: ");
+		return 0;
+	}     
+	
+	//Listen request from client
+	if(listen(listenfd, BACKLOG) == -1){  /* calls listen() */
+		perror("\nError: ");
+		return 0;
+	}
 
 	maxfd = listenfd;			/* initialize */
 	maxi = -1;			/* index into client[] array */
@@ -460,49 +536,17 @@ int main(int argc,char *argv[])
 				break;
 			}
 
-				
 
-		}
-		
 
 		if (--nready <= 0)
 			break;		/* no more readable descriptors */
 		}
-		
 
 
 
-		//accept request
-		// loginProtocolState = no_connect;
-		// sin_size = sizeof(struct sockaddr_in);
-		// if ((conn_sock = accept(listen_sock,( struct sockaddr *)&client, &sin_size)) == -1) 
-		// 	perror("\nError: ");
-		// printf("You got a connection from %s\n", inet_ntoa(client.sin_addr) ); /* prints client's IP */
-		// // check if full connect or not
-		// int a=find_empty_session();
-		// //start conversation
-		// if (fork() == 0) 
-  //       	login_handle(conn_sock,a);
 	}
-	
+
 	close(listenfd);
-
-	// accept new socket
-
-	// receive id message
-	//check
-	//send repsond message
-	//change protocol
-	//set new protocol state ==> web protocol
-		//reviece and send message
-		// if receive enter room ==> find room by id
-		 //change protocol ==> change room's user attribute  and add matching from user to room
-		//map_socket_to_room[socket] = room
-	
-	
-	//receive set price 
-		// tim tu socket --> room tuong ung
-		// check and set new price, send to all user,
 
 	return 0;
 }

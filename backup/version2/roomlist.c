@@ -10,19 +10,19 @@ Room ** create_room_list(){
 //create a new node 
 //new node will have soluongdangnhapsai=0,islogin=0
 //return new node
-Room *creat_newroom(int id, char *username, Queue *product_list, int number_of_member){
+Room *creat_newroom(int id, char *username, Queue *product_list){
   Room *newroom=(Room *)malloc(sizeof(Room));
   newroom->id = id;
   newroom->username = username;
+  newroom->number_of_member = 0;
   newroom->product_list = product_list;
-  newroom->number_of_member = number_of_member;
   newroom->next=NULL;
   return newroom;
 }
 // add new node to link list
 //head: head of link list,name,password,status: info of newroom
-Room* add_new_room(Room **head, int id, char *username, Queue *product_list, int number_of_member){
-  Room *newroom=creat_newroom(id, username, product_list, number_of_member);
+Room* add_new_room(Room **head, int id, char *username, Queue *product_list){
+  Room *newroom=creat_newroom(id, username, product_list);
   if ((*head)==NULL){
     (*head)=newroom;
   }
@@ -36,16 +36,6 @@ Room* add_new_room(Room **head, int id, char *username, Queue *product_list, int
    return newroom;
 
 }
-Room *add_room(Room **header, Room *room){
-  return add_new_room(header, room->id, room->username, room->product_list, room->number_of_member);
-}
-
-// print all information of a room
-void printRoom(Room *room){
-  if(room == NULL) return;
-  printf("%d %s %d\n", room->id, room->username, room->number_of_member);
-  Output(*(room->product_list));
-}
 //print value in a linklist
 //use for debug
 //param:head[IN]:head of link list
@@ -53,7 +43,7 @@ void print_all_room(Room **head){
 
   Room *top=(*head);
   while(top!=NULL){
-    printRoom(top);
+    printf("");
     top=top->next;
   }
 }
@@ -114,9 +104,7 @@ void free_room_list(Room **head){
 
 int count_room(Room *header) {
   int count = 0;
-  while(header != NULL){
+  while(header != NULL)
     count++;
-    header = header->next;
-  }
   return count;
 }

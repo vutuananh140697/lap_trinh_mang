@@ -6,10 +6,6 @@
 #include "queue.h"
 
 typedef struct Room {
-	struct Room *next;
-	int id;
-	char *username;
-	Queue *product_list;
 struct Room *next;
 int id;
 char *username;
@@ -23,15 +19,10 @@ Room** create_room_list();
 //create a new node 
 //new node will have soluongdangnhapsai=0,islogin=0
 //return new node
-Room *creat_newroom(int id, char* username, Queue *product_list, int number_of_member);
+Room *creat_newroom(int id, char* username, Queue *product_list);
 // add new node to link list
 //head: head of link list,name,password,status: info of newnode
-Room *add_new_room(Room **head, int id, char *username, Queue *product_list, int number_of_member);
-// bound function of add_new_room
-// add a room node to a roomlist
-Room *add_room(Room **header, Room *room);
-//print all information of a room
-void printRoom(Room *room);
+Room* add_new_room(Room **head, int id, char *username, Queue *product_list);
 //print value in a linklist
 //use for debug
 //param:head[IN]:head of link list
@@ -46,6 +37,6 @@ Room *search_room(Room **head, int id);
 void delete_room(Room **head, int id);
 //free a list to releash memory
 void free_room_list(Room **head);
-int send_room_list(int socket, Room *header, int room_length);
+
 int count_room(Room *header);
 #endif
