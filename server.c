@@ -156,7 +156,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 								FD_SET(sockfd,checkfds_read);
 								(session->login_data).user->soluongdangnhapsai=0;
 								session->protocol_group_id=web_protocol;
-								session->web_state=wbe_authorized;
+								session->web_state=web_authorized;
 							}
 							else{
 								if(strcmp("q",(char*)msg.data)!=0){
@@ -212,8 +212,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 int web_protocol_handle(SESSION * session,int sockfd,
 	fd_set *readfds,fd_set *writefds,fd_set *exceptfds,fd_set *checkfds_read,fd_set *checkfds_write,
 	map_socket_to_room_type map_socket_to_seeing_room,
-	Room **header,Room **my_room)
-{
+	Room **header,Room **my_room){
 
 	web_message msg;
 	// BUY_NOW_RESPOND data;
@@ -223,7 +222,7 @@ int web_protocol_handle(SESSION * session,int sockfd,
 	switch(session->web_state){
 		case web_not_authorzied:
 			break;
-		case wbe_authorized:
+		case web_authorized:
 			// printf("authorized\n");
 			if(receive_web_message(sockfd, &msg) == 0){
 				// printf("receive_message successfully\n");
@@ -232,6 +231,7 @@ int web_protocol_handle(SESSION * session,int sockfd,
 				MY_ROOM_LIST_PARAM *my_room_list_param;
 				ROOM_DETAIL_PARAM *room_detail_param;
 				BUY_NOW_PARAM *buy_now_param;
+				ENTER_ROOM_PARAM *enter_room_param;
 				switch(msg.code){
 					case REQUEST_ROOM_LIST:
 						room_list_param = (ROOM_LIST_PARAM*)msg.data;
@@ -287,6 +287,7 @@ int web_protocol_handle(SESSION * session,int sockfd,
 						Room *new_room = add_new_room(header, count_room(*header)+1, (session->login_data).user->name, make_room_param->product_list, 0);
 						// printf("2 ok \n");
 						add_room(my_room, new_room);
+						//print_all_room(header);
 						// printf("3 ok \n");
 						// todo delete my room and add function to filter my room instead of using my_room array
 						char mess[1000] = "Create room successfull";
@@ -301,21 +302,34 @@ int web_protocol_handle(SESSION * session,int sockfd,
 						MY_ROOM_LIST_RESPOND my_room_list_respond;
 						my_room_list_respond.header = *my_room;
 						if(send_RESPOND_ROOM_LIST(sockfd, my_room_list_respond) != 0)
-							{close(sockfd);
-								printf("connect is die\n");
-							return -1;}
+							{close(sockfd);printf("connect is die\n");return -1;}
 						break;
-					
-					case ENTER_ROOM:
-						session->protocol_group_id=auction_protocol;
-						int room_id=1;
-						(session->auction_data).room=search_room(header,room_id);
-						
+					case REQUEST_ENTER_ROOM:
+						enter_room_param = (ENTER_ROOM_PARAM*)msg.data;
+						ENTER_ROOM_RESPOND enter_room_respond;
+						Room *enterroom = search_room(header, enter_room_param->room_id);
+						if(enterroom == NULL) 
+							enter_room_respond.result = 0;
+						else{
+							enter_room_respond.result = 1;
+							session->protocol_group_id = auction_protocol;
+							(session->auction_data).room = enterroom;
+						}
+						enter_room_respond.room = enterroom;
+						if(send_RESPOND_ENTER_ROOM(sockfd, enter_room_respond) != 0)
+							{close(sockfd);printf("connect is die\n");return -1;}
+						break;
 					break;
-					case REQUEST_LOGOUT:
-					break;
+					case REQUEST_LOG_OUT:
+						session->protocol_group_id = login_protocol;
+						session->login_state = no_connect;
+						session->web_state = web_not_authorzied;
+						session->auction_state = no_set_price_or_passed;
+						if(send_LOG_OUT_RESPOND(sockfd) != 0)
+							{close(sockfd);printf("connect is die\n");return -1;}
+						break;
+					}
 				}
-			}
 		break;
 	}
 
@@ -511,8 +525,8 @@ int main(int argc,char *argv[])
 				auction_protocol_handle(&session[i],session,client,client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
 				
 			}
-			if (--nready < 0)
-				break;		/* no more readable descriptors */
+			// if (--nready < 0)
+			// 	break;		 //no more readable descriptors  // try fix bug without commenting the code  
 		}
 
 

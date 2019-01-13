@@ -130,7 +130,6 @@ int recv_room_list(int socket, Room **header){
 
 int check_error(int a, int b, int c){
 	if(a==-1 || b==-1 ||c==-1){
-		// printf("%d %d %d\n",a,b,c );
 		return -1;
 	}
 	return 0;
@@ -252,12 +251,12 @@ int receive_REQUEST_ROOM_DETAIL(int socket, web_message *message){
 	return check_error(0, b, c);
 }
 
-int send_RESPOND_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND param){
+int send_RESPOND_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND data){
 	int a = send_a_int(socket, RESPOND_ROOM_DETAIL);
-	int b = send_a_int(socket, param.result);
+	int b = send_a_int(socket, data.result);
 	int c = 0;
-	if(param.result != 0)
-		c = send_a_room(socket, param.room);
+	if(data.result != 0)
+		c = send_a_room(socket, data.room);
 	return check_error(a, b, c);
 }
 
@@ -274,31 +273,6 @@ int receive_RESPOND_ROOM_DETAIL(int socket, web_message *message){
 	message->data = param;
 	return check_error(0, b, 0);
 }
-
-// int send_room_list(int socket, Room *header, int room_length){
-//   if(send_a_int(socket, room_length) != 0)
-//     return -1;
-//   while(header != NULL){
-//     if(send_a_int(socket, header->id) != 0) 
-//       return -1;
-//     if(send_a_string(socket, header->username) != 0)
-//       return -1;
-//     if(send_a_queue(socket, header->product_list) != 0)
-//       return -1;
-//     return 0;
-//   }
-
-//   int send_a_queue(int socket, Queue *first){
-//     while(first != NULL){
-//       if(send_all_byte(socket, first->item) != 0)
-//         return -1;
-//       first = first->Next;
-//     }
-//     return 0;
-//   }
-// }
-
-
 
 int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param){
 	int a = send_a_int(socket, REQUEST_MY_ROOM_LIST);
@@ -330,6 +304,49 @@ int receive_RESPOND_MY_ROOM_LIST(int socket, web_message *message){
 	param->header = *header;
 	message->data = param;
 	return check_error(0, b, 0);
+}
+int send_REQUEST_ENTER_ROOM(int socket,ENTER_ROOM_PARAM param){
+	int a = send_a_int(socket, REQUEST_ENTER_ROOM);
+	int b = send_a_int(socket, sizeof(ENTER_ROOM_PARAM));
+	int c = send_a_int(socket, param.room_id);
+	return check_error(a, b, c);
+}
+int receive_REQUEST_ENTER_ROOM(int socket, web_message *message){
+	ENTER_ROOM_PARAM *param = (ENTER_ROOM_PARAM*)malloc(sizeof(ENTER_ROOM_PARAM));
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &message->data_len);
+	int c = recv_a_int(socket, &param->room_id);
+	message->data = param;
+	return check_error(0, b, c);
+}
+int send_RESPOND_ENTER_ROOM(int socket,ENTER_ROOM_RESPOND data){
+	int a = send_a_int(socket, RESPOND_ENTER_ROOM);
+	int b = send_a_int(socket, data.result);
+	int c = 0;
+	if(data.result != 0)
+		c = send_a_room(socket, data.room);
+	return check_error(a, b, c);
+}
+int receive_RESPOND_ENTER_ROOM(int socket, web_message *message){
+	ENTER_ROOM_RESPOND *param = (ENTER_ROOM_RESPOND*)malloc(sizeof(ENTER_ROOM_RESPOND));
+	Room *room = (Room*)malloc(sizeof(Room));
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &param->result);
+	int c = 0;
+	if(param->result != 0){
+		c = recv_a_room(socket, room);
+		param->room = room;
+	}
+	message->data = param;
+	return check_error(0, b, 0);
+}
+int send_LOG_OUT_REQUEST(int socket){
+	int a = send_a_int(socket, REQUEST_LOG_OUT);
+	return check_error(a, 0, 0);
+}
+int send_LOG_OUT_RESPOND(int socket){
+	int a = send_a_int(socket, RESPOND_LOG_OUT);
+	return check_error(a, 0, 0);
 }
 int receive_web_message(int socket, web_message *message){
 	int a = recv_a_int(socket, &message->code);
@@ -366,12 +383,22 @@ int receive_web_message(int socket, web_message *message){
 			break;
 		case RESPOND_MY_ROOM_LIST:
 			b = receive_RESPOND_MY_ROOM_LIST(socket, message);
+			break;
+		case REQUEST_ENTER_ROOM:
+			b = receive_REQUEST_ENTER_ROOM(socket, message);
+			break;
+		case RESPOND_ENTER_ROOM:
+			b = receive_RESPOND_ENTER_ROOM(socket, message);
 			break;	
+		case REQUEST_LOG_OUT:
+			b = 0;
+			break;
+		case RESPOND_LOG_OUT:
+			b = 0;
+			break;
 		default:
 			break;
 	}
-	// printf("switch case success\n");
 	int ans = check_error(a, b, 0);
-	// printf("ans %d\n",ans);
 	return ans;
 }

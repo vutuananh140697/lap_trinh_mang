@@ -9,7 +9,7 @@
 //state of protocol
 enum Web_ProtocolState{
 	web_not_authorzied =0,
-	wbe_authorized = 1
+	web_authorized = 1
 };
 typedef struct Web_Data{
 	int user_id;
@@ -35,12 +35,12 @@ enum web_message_code{
 	// my room list
 	REQUEST_MY_ROOM_LIST=50,
 	RESPOND_MY_ROOM_LIST=51,
-	//ENTER_ROOM
-	ENTER_ROOM=60,
-
-	//
-	REQUEST_LOGOUT =70,
-	RESPOND_LOGOUT = 71,
+	// enter room
+	REQUEST_ENTER_ROOM=60,
+	RESPOND_ENTER_ROOM=61,
+	// log out
+	REQUEST_LOG_OUT=70,
+	RESPOND_LOG_OUT=71,
 	//unknow
 	LOGIC_NOTFOUND=-1
 };
@@ -93,6 +93,15 @@ typedef struct ROOM_DETAIL_RESPOND
 
 typedef ROOM_LIST_PARAM MY_ROOM_LIST_PARAM;
 typedef ROOM_LIST_RESPOND MY_ROOM_LIST_RESPOND;
+typedef struct ENTER_ROOM_PARAM
+{
+	int room_id;
+}ENTER_ROOM_PARAM;
+typedef struct ENTER_ROOM_RESPOND
+{
+	int result;
+	Room *room;
+}ENTER_ROOM_RESPOND;
 //core function
 int send_a_item(int socket, Item *item);
 int recv_a_item(int socket, Item *item);
@@ -133,6 +142,14 @@ int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param);
 int receive_REQUEST_MY_ROOM_LIST(int socket, web_message *message);
 int send_RESPOND_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data);
 int receive_RESPOND_MY_ROOM_LIST(int socket, web_message *message);
+
+int send_REQUEST_ENTER_ROOM(int socket,ENTER_ROOM_PARAM param);
+int receive_REQUEST_ENTER_ROOM(int socket, web_message *message);
+int send_RESPOND_ENTER_ROOM(int socket,ENTER_ROOM_RESPOND data);
+int receive_RESPOND_ENTER_ROOM(int socket, web_message *message);
+
+int send_LOG_OUT_REQUEST(int socket);
+int send_LOG_OUT_RESPOND(int socket);
 
 int receive_web_message(int socket, web_message *message);
 
