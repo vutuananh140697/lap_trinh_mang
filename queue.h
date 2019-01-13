@@ -31,6 +31,7 @@ void Push(Queue *Q, int id, char *name, char *description, int price, int price_
 void PushItem(Queue *Q, Item *item);
 Item *Pop(Queue *Q); //Loai bo phan tu khoi dau hang doi
 Item *searchItem(Queue Q, int id);
+void deleteItem(Queue *Q, int id);
 void printItem(Item *item);
 void Output(Queue Q); //Xuat 
 

@@ -344,6 +344,7 @@ int main(int argc,char *argv[])
 		for (i = 0; i <= maxi; i++) {	/* check all clients for data */
 		if ( (sockfd = client[i]) < 0)
 			continue;
+		printf("1\n");
 			switch(protocol_state[i]){
 				case no_connect:
 						if (FD_ISSET(sockfd, &readfds)) {
@@ -379,7 +380,6 @@ int main(int argc,char *argv[])
 						}
 					break;
 				case correct_id:
-
 					if(receive_message(sockfd,&msg[i])==-1)
 					{close(sockfd);printf("connect is die\n");return -1;}
 					if(msg[i].code==PASSWORD){
@@ -466,6 +466,8 @@ int main(int argc,char *argv[])
 							if(search_item == NULL){
 								strcpy(message_buy_now_respond, "Cannot found product");
 							}else{
+								deleteItem(map_socket_to_room[i].room->product_list, buy_now_param->id);
+								print_all_room(header);
 								strcpy(message_buy_now_respond, "Buy successfull");
 							}
 							buy_now_respond.message = message_buy_now_respond;
@@ -528,6 +530,7 @@ int main(int argc,char *argv[])
 		// //start conversation
 		// if (fork() == 0) 
   //       	login_handle(conn_sock,a);
+
 	}
 	
 	close(listenfd);

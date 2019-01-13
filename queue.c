@@ -83,6 +83,32 @@ Item *searchItem(Queue Q, int id){
     return NULL;
 }
 
+void deleteItem(Queue *Q, int id){
+    Qnode *qnode = Q->Front;
+    if(qnode == NULL) return;
+    if(qnode->item->id == id){
+        Q->Front = Q->Front->Next;
+        free(qnode);
+        Q->count --;
+        return;
+    }
+    else{
+        Qnode *tmp = qnode;
+        while(tmp != NULL){
+            tmp = qnode->Next;
+            if(tmp == NULL) return;
+            if(tmp->item->id == id){
+                qnode->Next = tmp->Next;
+                free(tmp);
+                Q->count --;
+                return;
+            }
+            qnode = qnode->Next;
+        }
+    }
+
+}
+
 void printItem(Item *item){
     printf("\t%d %s %s %d %d\n", item->id, item->name, item->description, item->price, item->price_immediately);
 }
