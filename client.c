@@ -85,13 +85,48 @@ void join_auction_handle(int socket){
 		exceptfds = checkfds_exception;
 		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
 		if (FD_ISSET(socket, &readfds)){
-			receive_auction_message(socket,&msg);
+			if(receive_auction_message(socket,&msg) != 0){
+				close(socket);
+				exit(-1);
+			}
+			NOTIFY_NEW_PRICE_RESPOND *notify_new_price_respond;
+			NOTIFY_SUCCESS_ONE_RESPOND *notify_success_one;
+			NOTIFY_SUCCESS_TWO_RESPOND *notify_success_two;
+			NOTIFY_SUCCESS_THREE_RESPOND *notify_success_three;
+			NOTIFY_PHASE_ONE_RESPOND *notify_phase_one;
+			NOTIFY_PHASE_TWO_RESPOND *notify_phase_two;
+			NOTIFY_PHASE_THREE_RESPOND *notify_phase_three;
 			switch(msg.code){
 				case NOTIFY_NEW_PRICE:
-				printf("co gia moi\n");
+				notify_new_price_respond = (NOTIFY_NEW_PRICE_RESPOND*)msg.data;
+				printf("New Price: %s - %d\n", notify_new_price_respond->winner_name, notify_new_price_respond->newprice);
 				break;
 				case RESPOND_SET_PRICE:
-				printf("dat gia thanh cong\n");
+				printf("Set price successfully\n");
+				break;
+				case NOTIFY_SUCCESS_ONE:
+				notify_success_one = (NOTIFY_SUCCESS_ONE_RESPOND*)msg.data;
+				printf("%s\n", notify_success_one->message);
+				break;
+				case NOTIFY_SUCCESS_TWO:
+				notify_success_two = (NOTIFY_SUCCESS_TWO_RESPOND*)msg.data;
+				printf("%s\n", notify_success_two->message);
+				break;
+				case NOTIFY_SUCCESS_THREE:
+				notify_success_three = (NOTIFY_SUCCESS_THREE_RESPOND*)msg.data;
+				printf("%s\n", notify_success_three->message);
+				break;
+				case NOTIFY_PHASE_ONE:
+				notify_phase_one = (NOTIFY_PHASE_ONE_RESPOND*)msg.data;
+				printf("%s win phase 1 with %d\n", notify_phase_one->winner_name, notify_phase_one->newprice);
+				break;
+				case NOTIFY_PHASE_TWO:
+				notify_phase_two = (NOTIFY_PHASE_TWO_RESPOND*)msg.data;
+				printf("%s win phase 2 with %d\n", notify_phase_two->winner_name, notify_phase_two->newprice);
+				break;
+				case NOTIFY_PHASE_THREE:
+				notify_phase_three = (NOTIFY_PHASE_THREE_RESPOND*)msg.data;
+				printf("%s win phase 3 with %d\n", notify_phase_three->winner_name, notify_phase_three->newprice);
 				break;
 			}
 		}

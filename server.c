@@ -157,6 +157,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 								(session->login_data).user->soluongdangnhapsai=0;
 								session->protocol_group_id=web_protocol;
 								session->web_state=web_authorized;
+								(session->web_data).user = (session->login_data).user;
 							}
 							else{
 								if(strcmp("q",(char*)msg.data)!=0){
@@ -314,6 +315,7 @@ int web_protocol_handle(SESSION * session,int sockfd,
 							enter_room_respond.result = 1;
 							session->protocol_group_id = auction_protocol;
 							(session->auction_data).room = enterroom;
+							(session->auction_data).user = (session->web_data).user;
 						}
 						enter_room_respond.room = enterroom;
 						if(send_RESPOND_ENTER_ROOM(sockfd, enter_room_respond) != 0)
@@ -365,6 +367,7 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			// printf(" set price\n");
 			item->start=time(NULL);
 			item->best_user=(session->login_data).user;
+			item->count = 0;
 
 			set_price_respond.message=(char *)malloc(sizeof(char)*100);
 			strcpy(set_price_respond.message,"set price successfully");
@@ -373,7 +376,7 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			// printf("send reprond successfully\n");
 			// notify to all users
 			NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
-			notify_new_price_respond.newprice=price;
+			notify_new_price_respond.newprice=item->price;
 			notify_new_price_respond.winner_name=(char *)malloc(sizeof(char)*100);
 			strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
 			notify_new_price_respond.start=item->start;
@@ -474,12 +477,12 @@ int main(int argc,char *argv[])
 	//Communicate with client
 	printf("%d\n", listenfd	 );
 	int value=0;
-	
+	struct timeval tv={0,10};
 	while(1){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
+		nready = select(1025,&readfds,&writefds,&exceptfds,&tv);
 		/* new client connection */
 		if (FD_ISSET(listenfd, &readfds)) {	
 			sin_size = sizeof(struct sockaddr_in);
@@ -518,7 +521,6 @@ int main(int argc,char *argv[])
 		for (i = 0; i <= maxi; i++) {	/* check all clients for data */
 			if ( (sockfd = client[i]) < 0)
 				continue;
-
 			if(session[i].protocol_group_id==login_protocol && FD_ISSET(sockfd,&readfds))
 			{
 				printf("xu ly login_protocol\n");
@@ -534,7 +536,7 @@ int main(int argc,char *argv[])
 				printf("ket thuc web_protocol %d\n-------\n",session[i].protocol_group_id);
 				
 			}
-			if (session[i].protocol_group_id==auction_protocol && FD_ISSET(sockfd,&readfds))
+			else if (session[i].protocol_group_id==auction_protocol && FD_ISSET(sockfd,&readfds))
 			{
 				printf("xu ly auction_protocol\n");
 				auction_protocol_handle(&session[i],session,client,client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
@@ -545,41 +547,85 @@ int main(int argc,char *argv[])
 			// 	break;		 //no more readable descriptors  // try fix bug without commenting the code  
 		}
 
-
-		Room *top=(*head);
-
+		Room *top=(*header);
+		int socket_of_best_user;
+		char success_one_message[100] = "Congratulation! You win phase 1";
+		char success_two_message[100] = "Congratulation! You win phase 2";
+		char success_three_message[100] = "Congratulation! You win";
 		while(top!=NULL){
 			item=top->product_list->Front->item;
-			start_time=item.start;
-			if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
+			start_time=item->start;
+			if(time(NULL)-start_time>3&&time(NULL)-start_time<6 && item->count == 0){
+				NOTIFY_SUCCESS_ONE_RESPOND notify_success_one;
+				NOTIFY_PHASE_ONE_RESPOND notify_phase_one;
+				notify_success_one.message = success_one_message;
 				item->count=1;
+				notify_phase_one.newprice = item->price;
+				notify_phase_one.winner_name = item->best_user->name;
+				for(i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.user != NULL)
+						if(strcmp((session[i].auction_data.user)->name,item->best_user->name) == 0)
+							break;
+				}
+				socket_of_best_user = client[i];
+
+				send_NOTIFY_SUCCESS_ONE(socket_of_best_user, notify_success_one);
 				for(int i=0;i<FD_SETSIZE;i++){
-					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-					}
+					if(session[i].auction_data.room != NULL)
+						if(client[i] != -1 && client[i] != socket_of_best_user && (session[i].auction_data).room->id==top->id && session[i].protocol_group_id==auction_protocol){
+							printf("%d\n", client[i]);
+							send_NOTIFY_PHASE_ONE(client[i], notify_phase_one);
+						}
 				}	
 			}
-			if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
+			else if(time(NULL)-start_time>=6&&time(NULL)-start_time<9 && item->count == 1){
 				item->count=2;
+				NOTIFY_SUCCESS_TWO_RESPOND notify_success_two;
+				NOTIFY_PHASE_TWO_RESPOND notify_phase_two;
+				notify_success_two.message = success_two_message;
+				notify_phase_two.newprice = item->price;
+				notify_phase_two.winner_name = item->best_user->name;
+
+				for(i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.user != NULL)
+						if(strcmp((session[i].auction_data.user)->name,item->best_user->name) == 0)
+							break;
+				}
+				socket_of_best_user = client[i];
+
+				send_NOTIFY_SUCCESS_TWO(socket_of_best_user, notify_success_two);
 				for(int i=0;i<FD_SETSIZE;i++){
-					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-					}
+					if(session[i].auction_data.room != NULL)
+						if(client[i] != -1 && client[i] != socket_of_best_user && (session[i].auction_data).room->id==top->id && session[i].protocol_group_id==auction_protocol){
+							send_NOTIFY_PHASE_TWO(client[i],notify_phase_two);
+						}
 				}	
 			}
-			if(time(NULL)-start_time>=9){
+			else if(time(NULL)-start_time>=9 && item->count == 2){
 				item->count=3;
-				send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
+				NOTIFY_SUCCESS_THREE_RESPOND notify_success_three;
+				NOTIFY_PHASE_THREE_RESPOND notify_phase_three;
+				notify_success_three.message = success_three_message;
+				notify_phase_three.newprice = item->price;
+				notify_phase_three.winner_name = item->best_user->name;
+
+				for(i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.user != NULL)
+						if(strcmp((session[i].auction_data.user)->name,item->best_user->name) == 0)
+							break;
+				}
+				socket_of_best_user = client[i];
+
+				send_NOTIFY_SUCCESS_THREE(socket_of_best_user, notify_success_three);
 				for(int i=0;i<FD_SETSIZE;i++){
-					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-					}
+					if(session[i].auction_data.room != NULL)
+						if(client[i] != -1 && client[i] != socket_of_best_user && (session[i].auction_data).room->id==top->id && session[i].protocol_group_id==auction_protocol){
+							send_NOTIFY_PHASE_THREE(client[i], notify_phase_three);
+						}
 				}	
 			}
 			top=top->next;
 		}
-
-
 
 
 	}
