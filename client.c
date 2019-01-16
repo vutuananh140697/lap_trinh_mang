@@ -14,6 +14,7 @@
 #include "queue.h"
 #include "roomlist.h"
 #include "web_protocol.h"
+#include "auction_protocol.h"
 
 #define BUFF_SIZE 8192
 //validate if string s is contain non-number character or not
@@ -66,6 +67,38 @@ void validate_input(int argc,char *argv[]){
 		exit(2);
 	}
 
+}
+
+void join_auction_handle(int socket){
+	printf("welcome to room \n");
+	int nready=-1;
+	SET_PRICE_PARAM data;
+	data.price =2000000;
+	send_REQUEST_SET_PRICE(socket, data);
+	fd_set checkfds_read,checkfds_write,checkfds_exception, readfds, writefds, exceptfds;
+	auction_message msg;
+	FD_ZERO(&checkfds_read);FD_ZERO(&checkfds_write);FD_ZERO(&checkfds_exception);
+	FD_SET(socket, &checkfds_read);
+	while(1){
+		readfds = checkfds_read;
+		writefds = checkfds_write;
+		exceptfds = checkfds_exception;
+		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
+		if (FD_ISSET(socket, &readfds)){
+			receive_auction_message(socket,&msg);
+			switch(msg.code){
+				case NOTIFY_NEW_PRICE:
+				printf("co gia moi\n");
+				break;
+				case RESPOND_SET_PRICE:
+				printf("dat gia thanh cong\n");
+				break;
+			}
+		}
+	}
+
+
+	printf("goodbye\n");
 }
 
 int main(int argc,char *argv[]){
@@ -203,12 +236,13 @@ int main(int argc,char *argv[]){
 											printf("Cannot found room %d\n", room_detail_param.room_id);
 										else{
 											printRoom(room_detail_respond->room);
-		
+											
 											// buy now
-											printf("Do you want to buy product now?: y/n\n");
-											char buy_now;
-											scanf("%c%*c", &buy_now);
-											if(buy_now == 'y'){
+											printf("1. Enter room\n2. Buy now\n");
+
+											int enter_room;
+											scanf("%d%*c", &enter_room);
+											if(enter_room == 2){
 												BUY_NOW_PARAM buy_now_param;
 												printf("Choose product by ID:");
 												scanf("%d%*c", &buy_now_param.id);
@@ -218,7 +252,18 @@ int main(int argc,char *argv[]){
 													{printf("connect is die\n");return -1;}
 												BUY_NOW_RESPOND *buy_now_respond = (BUY_NOW_RESPOND*)message.data;
 												printf("%s\n", buy_now_respond->message);
-										}
+											}
+											else{
+												ENTER_ROOM_PARAM enter_room_param;
+												enter_room_param.room_id=1;
+
+												if(send_REQUEST_ENTER_ROOM(client_sock, enter_room_param) != 0)
+													{printf("connect is die\n");return -1;}
+												if(receive_web_message(client_sock, &message) != 0)
+													{printf("connect is die\n");return -1;}
+												join_auction_handle(client_sock);
+
+											}
 										}
 
 									}

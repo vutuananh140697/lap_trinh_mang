@@ -223,9 +223,9 @@ int web_protocol_handle(SESSION * session,int sockfd,
 		case web_not_authorzied:
 			break;
 		case web_authorized:
-			// printf("authorized\n");
+			printf("authorized\n");
 			if(receive_web_message(sockfd, &msg) == 0){
-				// printf("receive_message successfully\n");
+				printf("receive_message successfully\n");
 				ROOM_LIST_PARAM *room_list_param;
 				MAKE_ROOM_PARAM *make_room_param;
 				MY_ROOM_LIST_PARAM *my_room_list_param;
@@ -321,12 +321,14 @@ int web_protocol_handle(SESSION * session,int sockfd,
 						break;
 					break;
 					case REQUEST_LOG_OUT:
+						printf("logout hanlde\n");
 						session->protocol_group_id = login_protocol;
 						session->login_state = no_connect;
 						session->web_state = web_not_authorzied;
 						session->auction_state = no_set_price_or_passed;
 						if(send_LOG_OUT_RESPOND(sockfd) != 0)
 							{close(sockfd);printf("connect is die\n");return -1;}
+						printf("logout hanlde end \n");
 						break;
 					}
 				}
@@ -339,28 +341,36 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 	auction_message msg;
 	SET_PRICE_RESPOND set_price_respond;
 	receive_auction_message(sockfd, &msg);
+	printf("receive_message successfully\n");
 
 	//get price
 	if(msg.code==REQUEST_SET_PRICE){
-		int price=((SET_PRICE_PARAM*)msg.data)->price;
+		// printf("%d\n",((SET_PRICE_PARAM*)(msg.data))->price );
+		int price=((SET_PRICE_PARAM*)(msg.data))->price;
 		Room *room=(session->auction_data).room;
 		Item *item=room->product_list->Front->item;
 		int current_price=item->price;
 		int price_immediately=item->price_immediately;
+		
 
 		if(price <current_price+5){
+			printf("invalide price, price %d, current_price %d\n",price,current_price);
 			set_price_respond.message=(char *)malloc(sizeof(char)*100);
 			strcpy(set_price_respond.message,"set price fail");
 			send_RESPOND_SET_PRICE(sockfd,set_price_respond);
 		}
 		else{
-			item->price=price;
+			item->price=item->price+1;
+			// item->price=price;
+			// printf(" set price\n");
 			item->start=time(NULL);
 			item->best_user=(session->login_data).user;
 
 			set_price_respond.message=(char *)malloc(sizeof(char)*100);
 			strcpy(set_price_respond.message,"set price successfully");
+			// printf("send reprond\n");
 			send_RESPOND_SET_PRICE(sockfd,set_price_respond);
+			// printf("send reprond successfully\n");
 			// notify to all users
 			NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
 			notify_new_price_respond.newprice=price;
@@ -370,13 +380,18 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			notify_new_price_respond.count=0;
 
 			for(int i=0;i<FD_SETSIZE;i++){
-				if((all_sesssion[i].auction_data).room->id==(session->auction_data).room->id && all_sesssion[i].protocol_group_id==auction_protocol){
-					send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond);
+				if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
+					if(client[i]!=sockfd){
+						send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond);
+					}
+					
+					printf("send notify to client %d\n",i);
 				}
 				// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
 				// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
 				// }
 			}
+			printf("successfully set price\n");
 
 		}
 
@@ -523,6 +538,7 @@ int main(int argc,char *argv[])
 			{
 				printf("xu ly auction_protocol\n");
 				auction_protocol_handle(&session[i],session,client,client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
+				printf("ket thuc auction_protocol %d\n-------\n",session[i].protocol_group_id);
 				
 			}
 			// if (--nready < 0)
@@ -530,38 +546,38 @@ int main(int argc,char *argv[])
 		}
 
 
-		// Room *top=(*head);
+		Room *top=(*head);
 
-		// while(top!=NULL){
-		// 	item=top->product_list->Front->item;
-		// 	start_time=item.start;
-		// 	if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
-		// 		item->count=1;
-		// 		for(int i=0;i<FD_SETSIZE;i++){
-		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-		// 			}
-		// 		}	
-		// 	}
-		// 	if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
-		// 		item->count=2;
-		// 		for(int i=0;i<FD_SETSIZE;i++){
-		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-		// 			}
-		// 		}	
-		// 	}
-		// 	if(time(NULL)-start_time>=9){
-		// 		item->count=3;
-		// 		send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
-		// 		for(int i=0;i<FD_SETSIZE;i++){
-		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-		// 			}
-		// 		}	
-		// 	}
-		// 	top=top->next;
-		// }
+		while(top!=NULL){
+			item=top->product_list->Front->item;
+			start_time=item.start;
+			if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
+				item->count=1;
+				for(int i=0;i<FD_SETSIZE;i++){
+					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+					}
+				}	
+			}
+			if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
+				item->count=2;
+				for(int i=0;i<FD_SETSIZE;i++){
+					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+					}
+				}	
+			}
+			if(time(NULL)-start_time>=9){
+				item->count=3;
+				send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
+				for(int i=0;i<FD_SETSIZE;i++){
+					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+					}
+				}	
+			}
+			top=top->next;
+		}
 
 
 

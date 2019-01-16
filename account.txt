@@ -1,4 +1,4 @@
 hu 1 0
 huy 1 1
-hung 123 0
 anh anh 1
+hung hung 1

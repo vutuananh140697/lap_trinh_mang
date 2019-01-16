@@ -148,11 +148,11 @@ int send_a_int(int socket,int value){
   return send_all_byte(socket,buff,sizeof(int));
 
 }
-int send_a_time_t(int socket,time_t value){
-  char buff[sizeof(time_t)];
-  memcpy(buff,&value,sizeof(time_t));
-  return send_all_byte(socket,buff,sizeof(time_t));
-}
+// int send_a_time_t(int socket,time_t value){
+//   char buff[sizeof(time_t)];
+//   memcpy(buff,&value,sizeof(time_t));
+//   return send_all_byte(socket,buff,sizeof(time_t));
+// }
 // send a string to socket
 int  send_a_string(int socket,char *str){
   if(send_a_int(socket,strlen(str)+1)==0){

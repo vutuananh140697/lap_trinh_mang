@@ -8,9 +8,10 @@ int check_error_auction(int a, int b, int c){
 }
 int receive_REQUEST_SET_PRICE(int socket,auction_message *msg)
 {
-	SET_PRICE_PARAM param;
-	int a= recv_a_int(socket,&(param.price));
-	msg->data=&param;
+	SET_PRICE_PARAM *param=(SET_PRICE_PARAM*)malloc(sizeof(SET_PRICE_PARAM));
+	int a= recv_a_int(socket,&(param->price));
+	// printf("price %d\n",param->price);
+	(*msg).data=param;
 	return check_error_auction(a,0,0);
 }
 int receive_RESPOND_SET_PRICE(int socket,auction_message *msg){
@@ -27,7 +28,8 @@ int receive_NOTIFY_NEW_PRICE(int socket,auction_message *msg){
 	param.winner_name[0]='\0';
 	int a= recv_a_int(socket,&(param.newprice));
 	int b= recv_a_string(socket,(param.winner_name));
-	int c= recv_a_time_t(socket,&(param.start));
+	// int c= recv_a_time_t(socket,&(param.start));
+	int c=0;
 	int d= recv_a_int(socket,&(param.count));
 	msg->data=&param;
 	return check_error_auction(a,b,check_error_auction(c,d,0));
@@ -80,7 +82,9 @@ int receive_auction_message(int socket,auction_message *message){
 	int b = -1;
 	switch(message->code){
 		case REQUEST_SET_PRICE:
+			printf("REQUEST_SET_PRICE\n");
 			b = receive_REQUEST_SET_PRICE(socket, message);
+			printf("%d cost \n",((SET_PRICE_PARAM*)(message->data))->price );
 			break;
 		case RESPOND_SET_PRICE:
 			b = receive_RESPOND_SET_PRICE(socket, message);
@@ -126,7 +130,7 @@ int send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data){
 	int a= send_a_int(socket, NOTIFY_NEW_PRICE);
 	int b= send_a_int(socket, data.newprice);
 	int c=send_a_string(socket, data.winner_name);
-	int d= send_a_time_t(socket,data.start);
+	// int d= send_a_time_t(socket,data.start);
 	int e=send_a_int(socket, data.count);
 }
 
