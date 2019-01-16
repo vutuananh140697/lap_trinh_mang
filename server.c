@@ -110,46 +110,48 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 	switch(session->login_state){
 					case no_connect:
 							printf("\tid handle\n");
-							if (FD_ISSET(sockfd, readfds)) {
-								receive_message(sockfd,&msg);
+							if (FD_ISSET(sockfd, readfds))
+							 {	
+							 	printf("ok\n");
+								if(receive_message(sockfd,&msg)!=0){return -1;}
+								printf("2 ok\n");
 								switch(msg.code){
 									case USERID:
 									printf("%s\n",(char*)msg.data );
 										code=search_userid(&(session->login_data).user,(char*)msg.data);
 										if (code==-1){
-											if(send_USERID_NOTFOUND(sockfd)==-1){
-												close((int)sockfd);printf("connect is die\n");return -1;}
+											if(send_USERID_NOTFOUND(sockfd)==-1){return -1;}
 										}
 										else if(code==-2){
-											if(send_USERID_BLOCK(sockfd)==-1){
-												close(sockfd);printf("connect is die\n");return -1;};
+											if(send_USERID_BLOCK(sockfd)==-1){return -1;};
 										}
 										else if(code ==-3){
-											if(send_USERID_ISSIGNIN(sockfd)==-1){
-												close(sockfd);printf("connect is die\n");return -1;};
+											if(send_USERID_ISSIGNIN(sockfd)==-1){return -1;};
 										}
 										else{
-											if(send_USERID_FOUND(sockfd)==-1){
-												close(sockfd);printf("connect is die\n");return -1;};
+											if(send_USERID_FOUND(sockfd)==-1){return -1;};
+												printf("%d\n", session->login_state);
 												session->login_state=correct_id;
-												FD_SET(sockfd,checkfds_write);
-												FD_CLR(sockfd,checkfds_read);
-										}
+												printf("%d\n", session->login_state);
+												FD_SET(sockfd,checkfds_read);
+												FD_CLR(sockfd,checkfds_write);
+											}
 										}
 										break;
 									default:
 										if(send_UNKNOWN(sockfd,msg))
-											{close(sockfd	);printf("connect is die\n");return -1;};
+											{return -1;};
 										break;
 							}
 						break;
 					case correct_id:
 						printf("\tpassword handle\n");
 						if(receive_message(sockfd,&msg)==-1)
-						{close(sockfd);printf("connect is die\n");return -1;}
+							{return -1;}
 						if(msg.code==PASSWORD){
 							if(strcmp((session->login_data).user->password,(char*)msg.data)==0){
 								if(send_PASSWORD_RIGHT(sockfd)==-1){
+									return -1;
 								}
 								session->login_state=authorized;
 								FD_CLR(sockfd,checkfds_write);
@@ -165,14 +167,14 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 										(session->login_data).user->status=0;
 										export_to_data_file();
 										if(send_PASSWORD_BLOCK(sockfd)==-1)
-											{close(sockfd);printf("connect is die\n");return -1;}
+											{return -1;}
 										session->login_state=no_connect;
 									}
 									else{
 										(session->login_data).user->soluongdangnhapsai+=1;
 										// 
 										if(send_PASSWORD_WRONG(sockfd)==-1)
-											{close(sockfd);printf("connect is die\n");return -1;}
+											{return -1;}
 
 									}
 								}
@@ -188,26 +190,27 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 						}
 						else{
 							if(send_UNKNOWN(sockfd,msg)==-1)
-								{close(sockfd);printf("connect is die\n");return -1;}
+								{return -1;}
 						}
 
 						 break;
 					case authorized:
 						if(receive_message(sockfd,&msg)==-1)
-							{close(sockfd);printf("connect is die\n");return -1;}
+							{return -1;}
 						switch(msg.code){
 							case LOGOUT:
 								if(send_LOGOUT_SUCCESS(sockfd)==-1)
-									{close(sockfd);printf("connect is die\n");return -1;}
+									{return -1;}
 								session->login_state=no_connect;
 							break;
 							default:
 								if(send_UNKNOWN(sockfd,msg)==01)
-									{close(sockfd);printf("connect is die\n");return -1;}
+									{return -1;}
 							break;
 						}
 						break;
 					}
+					return 0;
 }
 int web_protocol_handle(SESSION * session,int sockfd,
 	fd_set *readfds,fd_set *writefds,fd_set *exceptfds,fd_set *checkfds_read,fd_set *checkfds_write,
@@ -224,7 +227,8 @@ int web_protocol_handle(SESSION * session,int sockfd,
 			break;
 		case web_authorized:
 			printf("authorized\n");
-			if(receive_web_message(sockfd, &msg) == 0){
+			if(receive_web_message(sockfd, &msg) == 0)
+			{
 				printf("receive_message successfully\n");
 				ROOM_LIST_PARAM *room_list_param;
 				MAKE_ROOM_PARAM *make_room_param;
@@ -319,7 +323,7 @@ int web_protocol_handle(SESSION * session,int sockfd,
 						if(send_RESPOND_ENTER_ROOM(sockfd, enter_room_respond) != 0)
 							{close(sockfd);printf("connect is die\n");return -1;}
 						break;
-					break;
+						break;
 					case REQUEST_LOG_OUT:
 						printf("logout hanlde\n");
 						session->protocol_group_id = login_protocol;
@@ -330,17 +334,22 @@ int web_protocol_handle(SESSION * session,int sockfd,
 							{close(sockfd);printf("connect is die\n");return -1;}
 						printf("logout hanlde end \n");
 						break;
-					}
 				}
-		break;
+			}else{
+				return -1;
+			}
+
+			break;
 	}
+	return 0;
 
 }
 int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client,int sockfd,fd_set *readfds,fd_set *writefds,fd_set *exceptfds,fd_set *checkfds_read,fd_set *checkfds_write){
 
 	auction_message msg;
 	SET_PRICE_RESPOND set_price_respond;
-	receive_auction_message(sockfd, &msg);
+	if(receive_auction_message(sockfd, &msg)!=0)
+		return -1;
 	printf("receive_message successfully\n");
 
 	//get price
@@ -357,7 +366,8 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			printf("invalide price, price %d, current_price %d\n",price,current_price);
 			set_price_respond.message=(char *)malloc(sizeof(char)*100);
 			strcpy(set_price_respond.message,"set price fail");
-			send_RESPOND_SET_PRICE(sockfd,set_price_respond);
+			if(send_RESPOND_SET_PRICE(sockfd,set_price_respond)!=0)
+				return -1;
 		}
 		else{
 			item->price=item->price+1;
@@ -368,8 +378,9 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 
 			set_price_respond.message=(char *)malloc(sizeof(char)*100);
 			strcpy(set_price_respond.message,"set price successfully");
-			// printf("send reprond\n");
-			send_RESPOND_SET_PRICE(sockfd,set_price_respond);
+			printf("send reprond\n");
+			if(send_RESPOND_SET_PRICE(sockfd,set_price_respond)!=0)
+				return -1;
 			// printf("send reprond successfully\n");
 			// notify to all users
 			NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
@@ -382,10 +393,12 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			for(int i=0;i<FD_SETSIZE;i++){
 				if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
 					if(client[i]!=sockfd){
-						send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond);
+						if(send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond))
+							return -1;
+						printf("send notify to client %d\n",i);
 					}
 					
-					printf("send notify to client %d\n",i);
+					
 				}
 				// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
 				// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
@@ -397,16 +410,29 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 
 	}
 	else{
-		send_AUCTION_UNKNOWN(sockfd);
+		if(send_AUCTION_UNKNOWN(sockfd)!=0){
+			return -1;
+		}
 	}
 
 	//
-
+	return 0;
 	// 	case final_
 
 }
 
 
+void clearSession(SESSION *session){
+	session->protocol_group_id=login_protocol;
+	session->login_state=no_connect;
+	Login_Data login_data;
+	session->login_data=login_data;
+	Web_Data web_data;
+	session->web_data=web_data;
+	Auction_Data auction_data;
+	session->auction_data=auction_data;
+	session->web_state=web_not_authorzied;
+}
 int main(int argc,char *argv[])
 {
 
@@ -475,13 +501,31 @@ int main(int argc,char *argv[])
 	printf("%d\n", listenfd	 );
 	int value=0;
 	
+	char clear_error_buff[20];
 	while(1){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
+		nready = select(1025,&readfds,NULL,&exceptfds,NULL);
 		/* new client connection */
-		if (FD_ISSET(listenfd, &readfds)) {	
+		printf("start %d\n",nready );
+		for (i = 0; i <= maxi; i++) {
+			if( FD_ISSET(client[i],&writefds)){
+				printf("client %d\n",client[i]);
+				// printf("start %d\n",nready );
+				// FD_CLR(client[i],&checkfds_read);
+				// FD_CLR(client[i],&checkfds_write);
+				// FD_CLR(client[i],&checkfds_exception);
+				// close((int)client[i]);
+				// clearSession(&session[i]);
+				// client[i]=-1;
+				// bytes_received = recv(client[i], clear_error_buff,10, 0);
+				// printf("bytes_received %d\n",bytes_received);
+				// exit(-1);
+				
+			}
+		}
+		if (FD_ISSET(listenfd, &readfds) &&nready>0) {	
 			sin_size = sizeof(struct sockaddr_in);
 			if((connfd = accept(listenfd, (struct sockaddr *) &cliaddr,&sin_size)) < 0)
 				perror("\nError: ");
@@ -491,8 +535,8 @@ int main(int argc,char *argv[])
 					if (client[i] < 0) {
 						client[i] = connfd;	/* save descriptor */
 						FD_SET(connfd, &checkfds_read);
-						session[i].protocol_group_id=login_protocol;
-						session[i].login_state=no_connect;
+						
+						// session[i].auction_state=no_connect;
 						printf("new connect %d\n", connfd);
 
 						break;
@@ -507,77 +551,117 @@ int main(int argc,char *argv[])
 						maxfd = connfd;		/* for select */
 					if (i > maxi)
 						maxi = i;		/* max index in client[] array */
-					printf("start %d\n",nready );
+					
 					if (nready-=1,nready <= 0)
 						continue;		/* no more readable descriptors */
 					}
 				
 			}
 		}
+		if (nready>0){
+			for (i = 0; i <= maxi; i++) {	/* check all clients for data */
+				if ( (sockfd = client[i]) < 0)
+					continue;
 
-		for (i = 0; i <= maxi; i++) {	/* check all clients for data */
-			if ( (sockfd = client[i]) < 0)
-				continue;
+				if(session[i].protocol_group_id==login_protocol && FD_ISSET(sockfd,&readfds))
+				{
+					printf("xu ly login_protocol cho client %d\n",i);
+					if(login_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write)!=0){
+						// close((int)client[i]);
+						// clearSession(&session[i]);
+						// printf("client %d\n",client[i]);
+						// printf("start %d\n",nready );
+						FD_CLR(client[i],&checkfds_read);
+						FD_CLR(client[i],&checkfds_write);
+						FD_CLR(client[i],&checkfds_exception);
+						close((int)client[i]);
+						client[i]=-1;
+						clearSession(&session[i]);
+					}
 
-			if(session[i].protocol_group_id==login_protocol && FD_ISSET(sockfd,&readfds))
-			{
-				printf("xu ly login_protocol\n");
-				login_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
-				printf("ket thuc login_protocol%d\n-------\n", session[i].protocol_group_id);
-				FD_SET(client[i], &checkfds_read);
-				
+					printf("ket thuc login_protocol%d\n-------\n", session[i].protocol_group_id);
+					FD_SET(client[i], &checkfds_read);
+					
+				}
+				else if (session[i].protocol_group_id==web_protocol && FD_ISSET(sockfd,&readfds))
+				{
+					printf("xu ly web_protocol\n");
+					if(web_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write,map_socket_to_seeing_room[i],header,my_room[i])!=0){
+						// close((int)client[i]);
+						// clearSession(&session[i]);
+						// printf("client %d\n",client[i]);
+						// printf("start %d\n",nready );
+						FD_CLR(client[i],&checkfds_read);
+						FD_CLR(client[i],&checkfds_write);
+						FD_CLR(client[i],&checkfds_exception);
+						close((int)client[i]);
+						client[i]=-1;
+						clearSession(&session[i]);
+					}
+					printf("ket thuc web_protocol %d\n-------\n",session[i].protocol_group_id);
+					
+				}
+				else if (session[i].protocol_group_id==auction_protocol && FD_ISSET(sockfd,&readfds))
+				{
+					printf("xu ly auction_protocol\n");
+					if(auction_protocol_handle(&session[i],session,client,client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write)!=0){
+						// close((int)client[i]);
+						// clearSession(&session[i]);
+						// printf("client %d\n",client[i]);
+						// printf("start %d\n",nready );
+						FD_CLR(client[i],&checkfds_read);
+						FD_CLR(client[i],&checkfds_write);
+						FD_CLR(client[i],&checkfds_exception);
+						close((int)client[i]);
+						client[i]=-1;
+						clearSession(&session[i]);
+					}
+					printf("ket thuc auction_protocol %d\n-------\n",session[i].protocol_group_id);
+					
+				}
+				// if (--nready < 0)
+				// 	break;		 //no more readable descriptors  // try fix bug without commenting the code  
 			}
-			else if (session[i].protocol_group_id==web_protocol && FD_ISSET(sockfd,&readfds))
-			{
-				printf("xu ly web_protocol\n");
-				web_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write,map_socket_to_seeing_room[i],header,my_room[i]);
-				printf("ket thuc web_protocol %d\n-------\n",session[i].protocol_group_id);
-				
-			}
-			if (session[i].protocol_group_id==auction_protocol && FD_ISSET(sockfd,&readfds))
-			{
-				printf("xu ly auction_protocol\n");
-				auction_protocol_handle(&session[i],session,client,client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write);
-				printf("ket thuc auction_protocol %d\n-------\n",session[i].protocol_group_id);
-				
-			}
-			// if (--nready < 0)
-			// 	break;		 //no more readable descriptors  // try fix bug without commenting the code  
 		}
+		// break;
+		// sleep(1);
+		
+		// printf("hello\n");
 
 
-		Room *top=(*head);
 
-		while(top!=NULL){
-			item=top->product_list->Front->item;
-			start_time=item.start;
-			if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
-				item->count=1;
-				for(int i=0;i<FD_SETSIZE;i++){
-					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-					}
-				}	
-			}
-			if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
-				item->count=2;
-				for(int i=0;i<FD_SETSIZE;i++){
-					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-					}
-				}	
-			}
-			if(time(NULL)-start_time>=9){
-				item->count=3;
-				send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
-				for(int i=0;i<FD_SETSIZE;i++){
-					if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-						send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-					}
-				}	
-			}
-			top=top->next;
-		}
+		// Room *top=(*head);
+
+		// while(top!=NULL){
+		// 	item=top->product_list->Front->item;
+		// 	start_time=item.start;
+		// 	if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
+		// 		item->count=1;
+		// 		for(int i=0;i<FD_SETSIZE;i++){
+		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+		// 			}
+		// 		}	
+		// 	}
+		// 	if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
+		// 		item->count=2;
+		// 		for(int i=0;i<FD_SETSIZE;i++){
+		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+		// 			}
+		// 		}	
+		// 	}
+		// 	if(time(NULL)-start_time>=9){
+		// 		item->count=3;
+		// 		send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
+		// 		for(int i=0;i<FD_SETSIZE;i++){
+		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
+		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+		// 			}
+		// 		}	
+		// 	}
+		// 	top=top->next;
+		// }
 
 
 

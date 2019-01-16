@@ -78,7 +78,9 @@ int receive_AUCTION_UNKNOWN(int socket,auction_message *msg){
 
 int receive_auction_message(int socket,auction_message *message){
 	int a = recv_a_int(socket, &message->code);
-
+	if(a!=0){
+		return -1;
+	}
 	int b = -1;
 	switch(message->code){
 		case REQUEST_SET_PRICE:

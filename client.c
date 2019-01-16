@@ -68,33 +68,84 @@ void validate_input(int argc,char *argv[]){
 	}
 
 }
+int kbhit(void)
+{
+	struct timeval tv;
+	fd_set read_fd;
+
+	tv.tv_sec=0;
+	tv.tv_usec=0;
+	FD_ZERO(&read_fd);
+	FD_SET(0,&read_fd);
+
+	if(select(0, &read_fd, NULL, NULL, &tv) == -1)
+		return 0;
+
+	if(FD_ISSET(0,&read_fd))
+		return 1;
+
+	return 0;
+}
 
 void join_auction_handle(int socket){
 	printf("welcome to room \n");
+	struct timeval tv = {0, 1};
 	int nready=-1;
 	SET_PRICE_PARAM data;
-	data.price =2000000;
-	send_REQUEST_SET_PRICE(socket, data);
 	fd_set checkfds_read,checkfds_write,checkfds_exception, readfds, writefds, exceptfds;
 	auction_message msg;
 	FD_ZERO(&checkfds_read);FD_ZERO(&checkfds_write);FD_ZERO(&checkfds_exception);
 	FD_SET(socket, &checkfds_read);
+	FD_SET(0, &checkfds_read);
+	char buffer[2000];
+	int price;
+	fflush(stdin); 
 	while(1){
+		// if(kbhit()){
+		// 	// printf("co ky tu\n");
+			
+		// }
+
+		
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
-		if (FD_ISSET(socket, &readfds)){
-			receive_auction_message(socket,&msg);
+		nready = select(1025,&readfds,&writefds,&exceptfds,&tv);
+		if(FD_ISSET(0,&readfds)){
+			scanf("%d%*c",&price);
+			fflush(stdin); 
+			data.price =price;
+			send_REQUEST_SET_PRICE(socket, data);
+			nready--;
+		}
+		if (FD_ISSET(socket, &readfds)&&nready>0){
+			if(receive_auction_message(socket,&msg)!=0){
+				printf("Error\n");
+				// return -1;
+				// continue;
+			}
 			switch(msg.code){
 				case NOTIFY_NEW_PRICE:
-				printf("co gia moi\n");
+					printf("co gia moi\n");
+					// printf(" %s dat %d\n vao luc\n",(char *)((NOTIFY_NEW_PRICE_RESPOND*)(msg.data))->winner_name,((NOTIFY_NEW_PRICE_RESPOND*)(msg.data))->newprice);																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																	
 				break;
 				case RESPOND_SET_PRICE:
-				printf("dat gia thanh cong\n");
+					strcpy(buffer,(char *)((SET_PRICE_RESPOND*)(msg.data))->message);
+					// printf("%s\n", buffer);
+					if(strcmp("set price fail",buffer)==0){
+						printf("khong thanh cong\n");
+					}
+					else{
+						printf("thanh cong %s\n",buffer);
+						// return -1;
+					}
+					// printf("%s\n",(char *)((SET_PRICE_RESPOND*)(msg.data))->message);
 				break;
 			}
 		}
+		
+
+
 	}
 
 
@@ -148,8 +199,10 @@ int main(int argc,char *argv[]){
 		if(strcmp(userid,"q")==0)
 			break;
 		//send login request with user id
+		printf("send user id\n");
 		if(send_USERID(client_sock,userid)==-1)
 			{close(client_sock);printf("connect is die\n");return -1;}
+		printf("send user id\n");
 		//receive respond from server
 		if(receive_message(client_sock,&msg)==-1){
 			printf("connect is die\n");return -1;}
@@ -275,8 +328,8 @@ int main(int argc,char *argv[]){
 									item->id = 1;
 									item->name = "Binh co";
 									item->description = "Binh co ngan nam";
-									item->price = 1000000;
-									item->price_immediately = 10000000;
+									item->price = 1000;
+									item->price_immediately = 1000;
 									Push(Q, item->id, item->name, item->description, item->price, item->price_immediately);
 									item->name = "Quan tai";
 									Push(Q, item->id+1, item->name, "Quan tai co ngan nam", item->price, 106000000);

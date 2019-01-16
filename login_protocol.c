@@ -12,9 +12,16 @@ int send_message(int socket, login_message msg){
 int receive_message(int socket,login_message *msg){
 	int temp;
 	int a=recv_a_int(socket,&temp);
+	if(a!=0){
+		return -1;
+	}
+	printf("1\n");
 	msg->code=temp;
 
 	int b=recv_a_int(socket,&(msg->data_len));
+	if(b!=0){
+		return -1;
+	}
 	msg->data=malloc(sizeof(msg->	data_len));
 	
 	int c=recv_all_byte(socket,msg->data,msg->data_len);
