@@ -111,10 +111,8 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 					case no_connect:
 							printf("\tid handle\n");
 							if (FD_ISSET(sockfd, readfds))
-							 {	
-							 	printf("ok\n");
+							 {
 								if(receive_message(sockfd,&msg)!=0){return -1;}
-								printf("2 ok\n");
 								switch(msg.code){
 									case USERID:
 									printf("%s\n",(char*)msg.data );
@@ -130,9 +128,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 										}
 										else{
 											if(send_USERID_FOUND(sockfd)==-1){return -1;};
-												printf("%d\n", session->login_state);
 												session->login_state=correct_id;
-												printf("%d\n", session->login_state);
 												FD_SET(sockfd,checkfds_read);
 												FD_CLR(sockfd,checkfds_write);
 											}
@@ -159,6 +155,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 								(session->login_data).user->soluongdangnhapsai=0;
 								session->protocol_group_id=web_protocol;
 								session->web_state=web_authorized;
+								(session->web_data).user = (session->login_data).user;
 							}
 							else{
 								if(strcmp("q",(char*)msg.data)!=0){
@@ -318,6 +315,7 @@ int web_protocol_handle(SESSION * session,int sockfd,
 							enter_room_respond.result = 1;
 							session->protocol_group_id = auction_protocol;
 							(session->auction_data).room = enterroom;
+							(session->auction_data).user = (session->web_data).user;
 						}
 						enter_room_respond.room = enterroom;
 						if(send_RESPOND_ENTER_ROOM(sockfd, enter_room_respond) != 0)
@@ -375,16 +373,17 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			// printf(" set price\n");
 			item->start=time(NULL);
 			item->best_user=(session->login_data).user;
+			item->count = 0;
 
 			set_price_respond.message=(char *)malloc(sizeof(char)*100);
 			strcpy(set_price_respond.message,"set price successfully");
-			printf("send reprond\n");
+//			printf("send reprond\n");
 			if(send_RESPOND_SET_PRICE(sockfd,set_price_respond)!=0)
 				return -1;
 			// printf("send reprond successfully\n");
 			// notify to all users
 			NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
-			notify_new_price_respond.newprice=price;
+			notify_new_price_respond.newprice=item->price;
 			notify_new_price_respond.winner_name=(char *)malloc(sizeof(char)*100);
 			strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
 			notify_new_price_respond.start=item->start;
@@ -397,8 +396,8 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 							return -1;
 						printf("send notify to client %d\n",i);
 					}
-					
-					
+
+
 				}
 				// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
 				// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
@@ -500,13 +499,14 @@ int main(int argc,char *argv[])
 	//Communicate with client
 	printf("%d\n", listenfd	 );
 	int value=0;
-	
+	struct timeval tv={0,10};
+
 	char clear_error_buff[20];
 	while(1){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		nready = select(1025,&readfds,NULL,&exceptfds,NULL);
+		nready = select(1025,&readfds,NULL,&exceptfds,&tv);
 		/* new client connection */
 		printf("start %d\n",nready );
 		for (i = 0; i <= maxi; i++) {
@@ -522,10 +522,10 @@ int main(int argc,char *argv[])
 				// bytes_received = recv(client[i], clear_error_buff,10, 0);
 				// printf("bytes_received %d\n",bytes_received);
 				// exit(-1);
-				
+
 			}
 		}
-		if (FD_ISSET(listenfd, &readfds) &&nready>0) {	
+		if (FD_ISSET(listenfd, &readfds) &&nready>0) {
 			sin_size = sizeof(struct sockaddr_in);
 			if((connfd = accept(listenfd, (struct sockaddr *) &cliaddr,&sin_size)) < 0)
 				perror("\nError: ");
@@ -535,8 +535,8 @@ int main(int argc,char *argv[])
 					if (client[i] < 0) {
 						client[i] = connfd;	/* save descriptor */
 						FD_SET(connfd, &checkfds_read);
-						
-						// session[i].auction_state=no_connect;
+						session[i].protocol_group_id=login_protocol;
+						session[i].login_state=no_connect;
 						printf("new connect %d\n", connfd);
 
 						break;
@@ -551,7 +551,7 @@ int main(int argc,char *argv[])
 						maxfd = connfd;		/* for select */
 					if (i > maxi)
 						maxi = i;		/* max index in client[] array */
-					
+
 					if (nready-=1,nready <= 0)
 						continue;		/* no more readable descriptors */
 					}
@@ -581,7 +581,7 @@ int main(int argc,char *argv[])
 
 					printf("ket thuc login_protocol%d\n-------\n", session[i].protocol_group_id);
 					FD_SET(client[i], &checkfds_read);
-					
+
 				}
 				else if (session[i].protocol_group_id==web_protocol && FD_ISSET(sockfd,&readfds))
 				{
@@ -599,7 +599,7 @@ int main(int argc,char *argv[])
 						clearSession(&session[i]);
 					}
 					printf("ket thuc web_protocol %d\n-------\n",session[i].protocol_group_id);
-					
+
 				}
 				else if (session[i].protocol_group_id==auction_protocol && FD_ISSET(sockfd,&readfds))
 				{
@@ -617,53 +617,96 @@ int main(int argc,char *argv[])
 						clearSession(&session[i]);
 					}
 					printf("ket thuc auction_protocol %d\n-------\n",session[i].protocol_group_id);
-					
+
 				}
 				// if (--nready < 0)
-				// 	break;		 //no more readable descriptors  // try fix bug without commenting the code  
+				// 	break;		 //no more readable descriptors  // try fix bug without commenting the code
 			}
 		}
 		// break;
 		// sleep(1);
-		
+
 		// printf("hello\n");
 
+		Room *top=(*header);
+		int socket_of_best_user;
+		char success_one_message[100] = "Congratulation! You win phase 1";
+		char success_two_message[100] = "Congratulation! You win phase 2";
+		char success_three_message[100] = "Congratulation! You win";
+		while(top!=NULL){
+			item=top->product_list->Front->item;
+			start_time=item->start;
+			if(time(NULL)-start_time>3&&time(NULL)-start_time<6 && item->count == 0){
+				NOTIFY_SUCCESS_ONE_RESPOND notify_success_one;
+				NOTIFY_PHASE_ONE_RESPOND notify_phase_one;
+				notify_success_one.message = success_one_message;
+				item->count=1;
+				notify_phase_one.newprice = item->price;
+				notify_phase_one.winner_name = item->best_user->name;
+				for(i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.user != NULL)
+						if(strcmp((session[i].auction_data.user)->name,item->best_user->name) == 0)
+							break;
+				}
+				socket_of_best_user = client[i];
 
+				send_NOTIFY_SUCCESS_ONE(socket_of_best_user, notify_success_one);
+				for(int i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.room != NULL)
+						if(client[i] != -1 && client[i] != socket_of_best_user && (session[i].auction_data).room->id==top->id && session[i].protocol_group_id==auction_protocol){
+							printf("%d\n", client[i]);
+							send_NOTIFY_PHASE_ONE(client[i], notify_phase_one);
+						}
+				}
+			}
+			else if(time(NULL)-start_time>=6&&time(NULL)-start_time<9 && item->count == 1){
+				item->count=2;
+				NOTIFY_SUCCESS_TWO_RESPOND notify_success_two;
+				NOTIFY_PHASE_TWO_RESPOND notify_phase_two;
+				notify_success_two.message = success_two_message;
+				notify_phase_two.newprice = item->price;
+				notify_phase_two.winner_name = item->best_user->name;
 
-		// Room *top=(*head);
+				for(i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.user != NULL)
+						if(strcmp((session[i].auction_data.user)->name,item->best_user->name) == 0)
+							break;
+				}
+				socket_of_best_user = client[i];
 
-		// while(top!=NULL){
-		// 	item=top->product_list->Front->item;
-		// 	start_time=item.start;
-		// 	if(time(NULL)-start_time>3&&time(NULL)-start_time<6){
-		// 		item->count=1;
-		// 		for(int i=0;i<FD_SETSIZE;i++){
-		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-		// 			}
-		// 		}	
-		// 	}
-		// 	if(time(NULL)-start_time>=6&&time(NULL)-start_time<9){
-		// 		item->count=2;
-		// 		for(int i=0;i<FD_SETSIZE;i++){
-		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-		// 			}
-		// 		}	
-		// 	}
-		// 	if(time(NULL)-start_time>=9){
-		// 		item->count=3;
-		// 		send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
-		// 		for(int i=0;i<FD_SETSIZE;i++){
-		// 			if((session[i].auction_data).room->id==top->id && all_sesssion[i]->protocol_state==auction_protocol){
-		// 				send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-		// 			}
-		// 		}	
-		// 	}
-		// 	top=top->next;
-		// }
+				send_NOTIFY_SUCCESS_TWO(socket_of_best_user, notify_success_two);
+				for(int i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.room != NULL)
+						if(client[i] != -1 && client[i] != socket_of_best_user && (session[i].auction_data).room->id==top->id && session[i].protocol_group_id==auction_protocol){
+							send_NOTIFY_PHASE_TWO(client[i],notify_phase_two);
+						}
+				}
+			}
+			else if(time(NULL)-start_time>=9 && item->count == 2){
+				item->count=3;
+				NOTIFY_SUCCESS_THREE_RESPOND notify_success_three;
+				NOTIFY_PHASE_THREE_RESPOND notify_phase_three;
+				notify_success_three.message = success_three_message;
+				notify_phase_three.newprice = item->price;
+				notify_phase_three.winner_name = item->best_user->name;
 
+				for(i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.user != NULL)
+						if(strcmp((session[i].auction_data.user)->name,item->best_user->name) == 0)
+							break;
+				}
+				socket_of_best_user = client[i];
 
+				send_NOTIFY_SUCCESS_THREE(socket_of_best_user, notify_success_three);
+				for(int i=0;i<FD_SETSIZE;i++){
+					if(session[i].auction_data.room != NULL)
+						if(client[i] != -1 && client[i] != socket_of_best_user && (session[i].auction_data).room->id==top->id && session[i].protocol_group_id==auction_protocol){
+							send_NOTIFY_PHASE_THREE(client[i], notify_phase_three);
+						}
+				}	
+			}
+			top=top->next;
+		}
 
 
 	}

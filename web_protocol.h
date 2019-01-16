@@ -12,7 +12,7 @@ enum Web_ProtocolState{
 	web_authorized = 1
 };
 typedef struct Web_Data{
-	int user_id;
+	Node *user;
 	Room* room;
 }Web_Data;
 #define USERNAME 1024

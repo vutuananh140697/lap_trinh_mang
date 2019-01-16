@@ -17,7 +17,7 @@ enum Auction_ProtocolState{
 	final_set_price =5,
 };
 typedef struct Auction_Data{
-	int user_id;
+	Node *user;
 	Room *room;
 } Auction_Data;
 
@@ -29,6 +29,12 @@ enum auction_message_code{
 
 	//notify:
 	NOTIFY_NEW_PRICE=43,
+	NOTIFY_SUCCESS_ONE=44,
+	NOTIFY_SUCCESS_TWO=45,
+	NOTIFY_SUCCESS_THREE=46,
+	NOTIFY_PHASE_ONE = 47,
+	NOTIFY_PHASE_TWO = 48,
+	NOTIFY_PHASE_THREE = 49,
 	//enter room 
 	// NOTIFY_ENTER_ROOM=50
 	// NOTIFY_NEXT_ITEM=51
@@ -79,6 +85,37 @@ typedef struct NOTIFY_NEW_PRICE_RESPOND
 	time_t start;
 	int count;
 }NOTIFY_NEW_PRICE_RESPOND;
+
+typedef struct NOTIFY_SUCCESS_ONE_RESPOND
+{
+	char *message;
+}NOTIFY_SUCCESS_ONE_RESPOND;
+
+typedef struct NOTIFY_SUCCESS_TWO_RESPOND
+{
+	char *message;
+}NOTIFY_SUCCESS_TWO_RESPOND;
+
+typedef struct NOTIFY_SUCCESS_THREE_RESPOND
+{
+	char *message;
+}NOTIFY_SUCCESS_THREE_RESPOND;
+typedef struct NOTIFY_PHASE_ONE_RESPOND
+{
+	int newprice;
+	char *winner_name;
+}NOTIFY_PHASE_ONE_RESPOND;
+typedef struct NOTIFY_PHASE_TWO_RESPOND
+{
+	int newprice;
+	char *winner_name;
+}NOTIFY_PHASE_TWO_RESPOND;
+typedef struct NOTIFY_PHASE_THREE_RESPOND
+{
+	int newprice;
+	char *winner_name;
+}NOTIFY_PHASE_THREE_RESPOND;
+
 //============== REQUEST_EXIT =============//
 typedef struct REQUEST_EXIT_PARAM
 {
@@ -109,6 +146,12 @@ int send_REQUEST_SET_PRICE(int socket,SET_PRICE_PARAM data);
 int send_RESPOND_SET_PRICE(int socket,SET_PRICE_RESPOND data);
 
 int send_NOTIFY_NEW_PRICE(int socket,NOTIFY_NEW_PRICE_RESPOND data);
+int send_NOTIFY_SUCCESS_ONE(int socket,NOTIFY_SUCCESS_ONE_RESPOND data);
+int send_NOTIFY_SUCCESS_TWO(int socket,NOTIFY_SUCCESS_TWO_RESPOND data);
+int send_NOTIFY_SUCCESS_THREE(int socket,NOTIFY_SUCCESS_THREE_RESPOND data);
+int send_NOTIFY_PHASE_ONE(int socket,NOTIFY_PHASE_ONE_RESPOND data);
+int send_NOTIFY_PHASE_TWO(int socket,NOTIFY_PHASE_TWO_RESPOND data);
+int send_NOTIFY_PHASE_THREE(int socket,NOTIFY_PHASE_THREE_RESPOND data);
 
 int send_REQUEST_EXIT_ROOM(int socket,REQUEST_EXIT_PARAM data);
 int send_RESPOND_EXIT_ROOM(int socket,EXIT_ROOM_RESPOND data);
