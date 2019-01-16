@@ -74,8 +74,6 @@ void join_auction_handle(int socket){
 	struct timeval tv = {0, 1};
 	int nready=-1;
 	SET_PRICE_PARAM data;
-	data.price =2000000;
-	send_REQUEST_SET_PRICE(socket, data);
 	fd_set checkfds_read,checkfds_write,checkfds_exception, readfds, writefds, exceptfds;
 	auction_message msg;
 	FD_ZERO(&checkfds_read);FD_ZERO(&checkfds_write);FD_ZERO(&checkfds_exception);

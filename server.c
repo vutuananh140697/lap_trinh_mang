@@ -368,8 +368,8 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 				return -1;
 		}
 		else{
-			item->price=item->price+1;
-			// item->price=price;
+//			item->price=item->price+1;
+			 item->price=price;
 			// printf(" set price\n");
 			item->start=time(NULL);
 			item->best_user=(session->login_data).user;
@@ -508,7 +508,7 @@ int main(int argc,char *argv[])
 		exceptfds = checkfds_exception;
 		nready = select(1025,&readfds,NULL,&exceptfds,&tv);
 		/* new client connection */
-		printf("start %d\n",nready );
+//		printf("start %d\n",nready );
 		for (i = 0; i <= maxi; i++) {
 			if( FD_ISSET(client[i],&writefds)){
 				printf("client %d\n",client[i]);
@@ -629,6 +629,7 @@ int main(int argc,char *argv[])
 		// printf("hello\n");
 
 		Room *top=(*header);
+		int interval =4;
 		int socket_of_best_user;
 		char success_one_message[100] = "Congratulation! You win phase 1";
 		char success_two_message[100] = "Congratulation! You win phase 2";
@@ -636,7 +637,7 @@ int main(int argc,char *argv[])
 		while(top!=NULL){
 			item=top->product_list->Front->item;
 			start_time=item->start;
-			if(time(NULL)-start_time>3&&time(NULL)-start_time<6 && item->count == 0){
+			if(time(NULL)-start_time>interval&&time(NULL)-start_time<interval*2 && item->count == 0){
 				NOTIFY_SUCCESS_ONE_RESPOND notify_success_one;
 				NOTIFY_PHASE_ONE_RESPOND notify_phase_one;
 				notify_success_one.message = success_one_message;
@@ -659,7 +660,7 @@ int main(int argc,char *argv[])
 						}
 				}
 			}
-			else if(time(NULL)-start_time>=6&&time(NULL)-start_time<9 && item->count == 1){
+			else if(time(NULL)-start_time>=interval*2&&time(NULL)-start_time<interval*3 && item->count == 1){
 				item->count=2;
 				NOTIFY_SUCCESS_TWO_RESPOND notify_success_two;
 				NOTIFY_PHASE_TWO_RESPOND notify_phase_two;
@@ -682,7 +683,7 @@ int main(int argc,char *argv[])
 						}
 				}
 			}
-			else if(time(NULL)-start_time>=9 && item->count == 2){
+			else if(time(NULL)-start_time>=interval*3 && item->count == 2){
 				item->count=3;
 				NOTIFY_SUCCESS_THREE_RESPOND notify_success_three;
 				NOTIFY_PHASE_THREE_RESPOND notify_phase_three;
