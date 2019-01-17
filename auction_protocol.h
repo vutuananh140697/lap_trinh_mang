@@ -47,9 +47,6 @@ enum auction_message_code{
 	AUCTION_RESPOND_BUY_NOW=21,
 	AUCTION_RESPOND_BUY_NOW_NOTIFY=22,
 	
-
-
-	
 	//unknow
 	AUCTION_UNKNOWN=-1
 };

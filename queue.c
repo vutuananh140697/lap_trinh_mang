@@ -64,7 +64,11 @@ Item *Pop(Queue *Q) //Loai bo phan tu khoi dau hang doi
     {
         Item *item = Q->Front->item;
         if (Q->count == 1) //neu co 1 phan tu
-            Init(Q);
+        {
+            Q->Front = NULL;
+            Q->Rear = NULL;
+            Q->count = 0;
+        }
         else{
             Q->Front = Q->Front->Next;
             Q->count --;
