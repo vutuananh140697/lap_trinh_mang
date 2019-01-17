@@ -13,6 +13,7 @@ Room ** create_room_list(){
 Room *creat_newroom(int id, char *username, Queue *product_list, int number_of_member){
   Room *newroom=(Room *)malloc(sizeof(Room));
   newroom->id = id;
+  newroom->is_end=0;
   newroom->username = username;
   newroom->product_list = product_list;
   newroom->number_of_member = number_of_member;
@@ -84,9 +85,9 @@ void delete_room(Room **head, int id){
   Room *top=*head;
   if(top == NULL) return;
   if(top->id == id){
-    // (top)->is_end=1;
-    (*head)=(*head)->next;
-     free(top);
+    (top)->is_end=1;
+    // (*head)=(*head)->next;
+    //  free(top);
     return;
   }
   else{
@@ -95,9 +96,9 @@ void delete_room(Room **head, int id){
       next=top->next;
       if(next == NULL) return;
       if(next->id == id){
-        // (top)->is_end=1;
-      	top->next=next->next;
-      	free(next);
+        (top)->is_end=1;
+      	// top->next=next->next;
+      	// free(next);
 	       return ;
       }
       top=top->next;
@@ -120,8 +121,8 @@ void free_room_list(Room **head){
 int count_room(Room *header) {
   int count = 0;
   while(header != NULL){
-    // if(header->is_end==0)
-      count++;
+    if(header->is_end==0)
+        count++;
     header = header->next;
   }
   return count;
@@ -135,7 +136,11 @@ Room ** get_running_room(Room *header){
   while(top!=NULL)
     {
       temp=top->next;
-      add_room(new_list,top);
+      if(top->is_end==0){
+        add_room(new_list,top);
+      }
+      
+      
       top=temp;
     }
   return new_list;

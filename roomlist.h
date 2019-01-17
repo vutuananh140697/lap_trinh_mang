@@ -7,6 +7,7 @@
 #include <time.h>
 typedef struct Room {
 	int id;
+	int is_end;
 	char *username;
 	Queue *product_list;
 	int number_of_member;

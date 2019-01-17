@@ -274,21 +274,24 @@ int web_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client,int
 							// strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
 							// notify_new_price_respond.start=search_item->start;
 							// notify_new_price_respond.count=2;
+							
+							NOTIFY_PHASE_THREE_RESPOND notify_phase_three;
+							notify_phase_three.newprice = search_item->price;
+							notify_phase_three.winner_name = search_item->best_user->name;
 
-							// for(int i=0;i<FD_SETSIZE;i++){
-							// 	if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
-							// 		if(client[i]!=sockfd){
-							// 			if(send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond))
-							// 				return -1;
-							// 			printf("send notify to client %d\n",i);
-							// 		}
+							for(int i=0;i<FD_SETSIZE;i++){
+								if(client[i]!=-1&&all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room!=NULL&&
+									(all_sesssion[i].auction_data).room->id==(session->web_data).room->id){
+									if(client[i]!=sockfd){
+										printf("send notify to client %d\n",client[i]);
+										if(send_NOTIFY_PHASE_THREE(client[i], notify_phase_three))
+											return -1;
+										printf("send notify to client %d\n",i);
+									}
 
 
-							// 	}
-								// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
-								// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-								// }
-							// }
+								}
+							}
 							
 						}
 						buy_now_respond.message = message_buy_now_respond;
@@ -405,6 +408,7 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 			strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
 			notify_new_price_respond.start=item->start;
 			notify_new_price_respond.count=0;
+
 
 			for(int i=0;i<FD_SETSIZE;i++){
 				if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
