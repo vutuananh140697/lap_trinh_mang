@@ -82,35 +82,20 @@ void join_auction_handle(int socket){
 	FD_SET(0, &checkfds_read);
 	char buffer[2000];
 	int price;
-	int auction_choose;
 	fflush(stdin);
-	REQUEST_EXIT_PARAM data_REQUEST_EXIT_PARAM;
 	while(1){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		printf("1. Send price\n2. Out\nchoose: ");
-		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
-		
-
+		nready = select(1025,&readfds,&writefds,&exceptfds,&tv);
 		if(FD_ISSET(0,&readfds)){
-			scanf("%d%*c",&auction_choose);
-			if(auction_choose==2){
-				send_REQUEST_EXIT_ROOM(socket,data_REQUEST_EXIT_PARAM);
-				if(receive_auction_message(socket,&msg) != 0){
-					close(socket);
-					exit(-1);
-				}
-				break;
-			}
-			printf("price: \n");
 			scanf("%d%*c",&price);
 			fflush(stdin);
 			data.price =price;
 			send_REQUEST_SET_PRICE(socket, data);
 			nready--;
 		}
-		if (FD_ISSET(socket, &readfds)){
+				if (FD_ISSET(socket, &readfds)){
 			if(receive_auction_message(socket,&msg) != 0){
 				close(socket);
 				exit(-1);
@@ -287,7 +272,7 @@ int main(int argc,char *argv[]){
 											// room detail
 											ROOM_DETAIL_PARAM room_detail_param;
 
-											printf("Select Room by ID(enter -1 to quit):");
+											printf("Select Room by ID(enter -1 to q):");
 
 											scanf("%d%*c",&room_detail_param.room_id);
 											if(room_detail_param.room_id==-1){

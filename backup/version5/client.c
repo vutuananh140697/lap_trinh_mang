@@ -84,26 +84,18 @@ void join_auction_handle(int socket){
 	int price;
 	int auction_choose;
 	fflush(stdin);
-	REQUEST_EXIT_PARAM data_REQUEST_EXIT_PARAM;
 	while(1){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		printf("1. Send price\n2. Out\nchoose: ");
 		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
-		
+		printf("1. Send price\n2. Out\n");
 
 		if(FD_ISSET(0,&readfds)){
 			scanf("%d%*c",&auction_choose);
 			if(auction_choose==2){
-				send_REQUEST_EXIT_ROOM(socket,data_REQUEST_EXIT_PARAM);
-				if(receive_auction_message(socket,&msg) != 0){
-					close(socket);
-					exit(-1);
-				}
 				break;
 			}
-			printf("price: \n");
 			scanf("%d%*c",&price);
 			fflush(stdin);
 			data.price =price;

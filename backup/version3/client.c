@@ -71,7 +71,6 @@ void validate_input(int argc,char *argv[]){
 
 void join_auction_handle(int socket){
 	printf("welcome to room \n");
-	printf("Product ID 1\n");
 	struct timeval tv = {0, 1};
 	int nready=-1;
 	SET_PRICE_PARAM data;
@@ -82,35 +81,20 @@ void join_auction_handle(int socket){
 	FD_SET(0, &checkfds_read);
 	char buffer[2000];
 	int price;
-	int auction_choose;
 	fflush(stdin);
-	REQUEST_EXIT_PARAM data_REQUEST_EXIT_PARAM;
 	while(1){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		printf("1. Send price\n2. Out\nchoose: ");
-		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
-		
-
+		nready = select(1025,&readfds,&writefds,&exceptfds,&tv);
 		if(FD_ISSET(0,&readfds)){
-			scanf("%d%*c",&auction_choose);
-			if(auction_choose==2){
-				send_REQUEST_EXIT_ROOM(socket,data_REQUEST_EXIT_PARAM);
-				if(receive_auction_message(socket,&msg) != 0){
-					close(socket);
-					exit(-1);
-				}
-				break;
-			}
-			printf("price: \n");
 			scanf("%d%*c",&price);
 			fflush(stdin);
 			data.price =price;
 			send_REQUEST_SET_PRICE(socket, data);
 			nready--;
 		}
-		if (FD_ISSET(socket, &readfds)){
+				if (FD_ISSET(socket, &readfds)){
 			if(receive_auction_message(socket,&msg) != 0){
 				close(socket);
 				exit(-1);
@@ -128,13 +112,7 @@ void join_auction_handle(int socket){
 				printf("New Price: %s - %d\n", notify_new_price_respond->winner_name, notify_new_price_respond->newprice);
 				break;
 				case RESPOND_SET_PRICE:
-					if(strcmp(((SET_PRICE_RESPOND*)msg.data)->message,"set price fail")==0){
-						printf("Set price fail\n");
-					}
-					else{
-						printf("Set price successfully\n");
-					}
-				
+				printf("Set price successfully\n");
 				break;
 				case NOTIFY_SUCCESS_ONE:
 				notify_success_one = (NOTIFY_SUCCESS_ONE_RESPOND*)msg.data;
@@ -159,10 +137,6 @@ void join_auction_handle(int socket){
 				case NOTIFY_PHASE_THREE:
 				notify_phase_three = (NOTIFY_PHASE_THREE_RESPOND*)msg.data;
 				printf("%s win phase 3 with %d\n", notify_phase_three->winner_name, notify_phase_three->newprice);
-				printf("Next Product\n");
-				break;
-				case RESPOND_EXIT_ROOM:
-					return;
 				break;
 			}
 		}
@@ -268,213 +242,142 @@ int main(int argc,char *argv[]){
 			}
 			//if passsword is right
 			if(msg.code==PASSWORD_RIGHT){
-								do{
-									printf("MENU:\n1.Room List\n2.Create new room\n3.My room\n4.Logout\n");
-									printf("Choose: ");
-									scanf("%d%*c", &choose);
-									if(choose == 1){
-										ROOM_LIST_PARAM room_list_param;
-										room_list_param.page_id = 1;
-										if(send_REQUEST_ROOM_LIST(client_sock, room_list_param) != 0)
+					do{
+
+						//display some menu
+						printf("MENU:\n1.menu\n2.logout\nchoose:");
+						scanf("%d%*c",&choosemenu);
+						switch(choosemenu){
+							case 1:
+
+								printf("MENU:\n1.Room List\n2.Create new room\n3.My room\n");
+								printf("Nhap lua chon: \n");
+								scanf("%d", &choose);
+								if(choose == 1){
+									ROOM_LIST_PARAM room_list_param;
+									room_list_param.page_id = 1;
+									if(send_REQUEST_ROOM_LIST(client_sock, room_list_param) != 0)
+										{printf("connect is die\n");return -1;}
+									web_message message;
+									if(receive_web_message(client_sock, &message) != 0)
+										{printf("connect is die\n");return -1;}
+									else{
+										ROOM_LIST_RESPOND *room_list_respond = (ROOM_LIST_RESPOND*)message.data;
+										print_all_room(&room_list_respond->header);
+
+										// room detail
+										ROOM_DETAIL_PARAM room_detail_param;
+
+										printf("Select Room by ID:");
+										scanf("%d%*c",&room_detail_param.room_id);
+
+										if(send_REQUEST_ROOM_DETAIL(client_sock, room_detail_param) != 0)
 											{printf("connect is die\n");return -1;}
-										web_message message;
 										if(receive_web_message(client_sock, &message) != 0)
 											{printf("connect is die\n");return -1;}
+										ROOM_DETAIL_RESPOND *room_detail_respond = (ROOM_DETAIL_RESPOND*)message.data;
+
+										if(room_detail_respond->result == 0) 
+											printf("Cannot found room %d\n", room_detail_param.room_id);
 										else{
-											ROOM_LIST_RESPOND *room_list_respond = (ROOM_LIST_RESPOND*)message.data;
-											print_all_room(&room_list_respond->header);
-
-											// room detail
-											ROOM_DETAIL_PARAM room_detail_param;
-
-											printf("Select Room by ID(enter -1 to quit):");
-
-											scanf("%d%*c",&room_detail_param.room_id);
-											if(room_detail_param.room_id==-1){
-												continue;
-											}
-
-											if(send_REQUEST_ROOM_DETAIL(client_sock, room_detail_param) != 0)
-												{printf("connect is die\n");return -1;}
-											if(receive_web_message(client_sock, &message) != 0)
-												{printf("connect is die\n");return -1;}
-											ROOM_DETAIL_RESPOND *room_detail_respond = (ROOM_DETAIL_RESPOND*)message.data;
-
-											if(room_detail_respond->result == 0) 
-												printf("Cannot found room %d\n", room_detail_param.room_id);
-											else{
-												printRoom(room_detail_respond->room);
-												
-												// buy now
-
-												int enter_room;
-												while(1){
-													printf("1. Enter room\n2. Buy now\n3. Quit\nChoose: ");
-													scanf("%d%*c", &enter_room);
-													if(enter_room==1||enter_room==2||enter_room==3){
-														break;
-													} 
-													else{
-														printf("Not valid choice\n");
-													}
-													}
-												if(enter_room == 3){
-													continue;
-												}
-												if(enter_room == 1){
-													ENTER_ROOM_PARAM enter_room_param;
-													enter_room_param.room_id = room_detail_param.room_id;
-
-													if(send_REQUEST_ENTER_ROOM(client_sock, enter_room_param) != 0)
-														{printf("connect is die\n");return -1;}
-													if(receive_web_message(client_sock, &message) != 0)
-														{printf("connect is die\n");return -1;}
-													join_auction_handle(client_sock);
-												}
-												else if(enter_room == 2){
-													BUY_NOW_PARAM buy_now_param;
-													printf("Choose product by ID:");
-													scanf("%d%*c", &buy_now_param.id);
-													if(send_REQUEST_BUY_NOW(client_sock, buy_now_param) != 0)
-														{printf("connect is die\n");return -1;}
-													if(receive_web_message(client_sock, &message) != 0)
-														{printf("connect is die\n");return -1;}
-													BUY_NOW_RESPOND *buy_now_respond = (BUY_NOW_RESPOND*)message.data;
-													printf("%s\n", buy_now_respond->message);
-												}
-												
-												
-											}
-
-										}
-
-									}
-									else if(choose == 2){
-
-										Q = Init(Q);
-										item->id = 1;
-										int add_room_choose;
-										char name[200];
-										char description[300];
-										int base_price;
-										int price_immediately;
-										while(1){
-											printf("1. Add item\n2. Send\n3. Quit\nChoose: ");
-											scanf("%d%*c", &add_room_choose);
-													if(add_room_choose==3){
-														break;
-													}
-													else if(add_room_choose==2){
-														if(count_products(Q)==0){
-															printf("Ban chua nhap bat ky san pham nao\n");
-															continue;
-														}
-														else{
-															break;
-														}
-													}
-													else if(add_room_choose==1){
-														printf("Name: ");
-														scanf("%[^\n]%*c",name);
-														item->name = name;
-														printf("description: ");
-														scanf("%[^\n]%*c",description);
-
-														item->description = description;
-														while(1){
-															printf("Base price: ");scanf("%d%*c", &base_price);
-															item->price = base_price;
-															printf("Price immediately: ");scanf("%d%*c", &price_immediately);
-															item->price_immediately = price_immediately;
-															if(base_price>=price_immediately || base_price<=0){
-																printf("Invalid price\n");
-															}
-															else{
-																break;
-															}
-														}
-
-														Push(Q, item->id, item->name, item->description, item->price, item->price_immediately);
-
-														// item->name = "Quan tai";
-														// Push(Q, item->id+1, item->name, "Quan tai co ngan nam", item->price, 106000000);
-
-														// item->name = "Piano";
-														// Push(Q, item->id+2, item->name, item->description, item->price, 4300000);
-													}
-													else{
-														printf("Not valid choice\n");
-													}
-										}
-
-										if(add_room_choose==2){
+											printRoom(room_detail_respond->room);
 											
-											MAKE_ROOM_PARAM make_room_param;
-											make_room_param.product_list = Q;
+											// buy now
+											printf("1. Enter room\n2. Buy now\n");
 
-											if(send_REQUEST_MAKE_ROOM(client_sock, make_room_param) != 0)
-												{printf("connect is die\n");return -1;}
+											int enter_room;
+											scanf("%d%*c", &enter_room);
+											if(enter_room == 2){
+												BUY_NOW_PARAM buy_now_param;
+												printf("Choose product by ID:");
+												scanf("%d%*c", &buy_now_param.id);
+												if(send_REQUEST_BUY_NOW(client_sock, buy_now_param) != 0)
+													{printf("connect is die\n");return -1;}
+												if(receive_web_message(client_sock, &message) != 0)
+													{printf("connect is die\n");return -1;}
+												BUY_NOW_RESPOND *buy_now_respond = (BUY_NOW_RESPOND*)message.data;
+												printf("%s\n", buy_now_respond->message);
+											}
+											else{
+												ENTER_ROOM_PARAM enter_room_param;
+												enter_room_param.room_id=1;
 
-											web_message message;
-											if(receive_web_message(client_sock, &message) != 0)
-												{printf("connect is die\n");return -1;}
-											MAKE_ROOM_RESPOND *make_room_respond = (MAKE_ROOM_RESPOND*)message.data;
-											printf("%s\n", make_room_respond->message);
-										}
-										else if(add_room_choose==3){
-											continue;
-										}
+												if(send_REQUEST_ENTER_ROOM(client_sock, enter_room_param) != 0)
+													{printf("connect is die\n");return -1;}
+												if(receive_web_message(client_sock, &message) != 0)
+													{printf("connect is die\n");return -1;}
+												join_auction_handle(client_sock);
 
-
-
-									}
-									else if(choose == 3){
-										MY_ROOM_LIST_PARAM my_room_list_param;
-										my_room_list_param.page_id = 1;
-										if(send_REQUEST_MY_ROOM_LIST(client_sock, my_room_list_param) != 0)
-											{printf("connect is die\n");return -1;}
-										web_message message;
-										if(receive_web_message(client_sock, &message) != 0)
-											{printf("connect is die\n");return -1;}
-										else{
-											MY_ROOM_LIST_RESPOND *my_room_list_respond = (MY_ROOM_LIST_RESPOND*)message.data;
-											print_all_room(&my_room_list_respond->header);
+											}
 										}
 
 									}
-									else if(choose == 4){
-										send_LOG_OUT_REQUEST(client_sock);
-										web_message message;
-										if(receive_web_message(client_sock, &message) != 0)
-											{printf("connect is die\n");return -1;}
-										else{
-											printf("Goodbye\n");
-										}
+
+								}
+								else if(choose == 2){
+
+									Q = Init(Q);
+									item->id = 1;
+									item->name = "Binh co";
+									item->description = "Binh co ngan nam";
+									item->price = 1000;
+									item->price_immediately = 1000;
+									Push(Q, item->id, item->name, item->description, item->price, item->price_immediately);
+									item->name = "Quan tai";
+									Push(Q, item->id+1, item->name, "Quan tai co ngan nam", item->price, 106000000);
+									item->name = "Piano";
+									Push(Q, item->id+2, item->name, item->description, item->price, 4300000);
+
+									MAKE_ROOM_PARAM make_room_param;
+									make_room_param.product_list = Q;
+
+									if(send_REQUEST_MAKE_ROOM(client_sock, make_room_param) != 0)
+										{printf("connect is die\n");return -1;}
+
+									web_message message;
+									if(receive_web_message(client_sock, &message) != 0)
+										{printf("connect is die\n");return -1;}
+									MAKE_ROOM_RESPOND *make_room_respond = (MAKE_ROOM_RESPOND*)message.data;
+									printf("%s\n", make_room_respond->message);
+
+								}
+								else if(choose == 3){
+									MY_ROOM_LIST_PARAM my_room_list_param;
+									my_room_list_param.page_id = 1;
+									if(send_REQUEST_MY_ROOM_LIST(client_sock, my_room_list_param) != 0)
+										{printf("connect is die\n");return -1;}
+									web_message message;
+									if(receive_web_message(client_sock, &message) != 0)
+										{printf("connect is die\n");return -1;}
+									else{
+										MY_ROOM_LIST_RESPOND *my_room_list_respond = (MY_ROOM_LIST_RESPOND*)message.data;
+										print_all_room(&my_room_list_respond->header);
 									}
-								}while(choose != 4);
-								// break;
-							// case 2:
-							// //send logout request
-							// 	if(send_LOGOUT(client_sock)==-1)
-							// 		{close(client_sock);printf("connect is die\n");return -1;}
-							// 	if(receive_message(client_sock,&msg)==-1){
-							// 		printf("connect is die\n");return -1;}
-							// 	//if logout success
-							// 	if(msg.code==LOGOUT_SUCCESS){
-							// 		printf("goodbye!\n");
-							// 	}
-							// 	else if(msg.code==LOGOUT_UNSUCCESS){
-							// 		printf("logout uncess!\n");
-							// 	}
-							// 	else{
-							// 		printf("unknown code from server!\n");
-							// 	}
-							// 	break;
-							// default:
-							// 	printf("please enter a number in range 1 and 2!\n");
-							// 	break;
-						// }
-					// }while(choosemenu!=2);
+
+								}
+								break;
+							case 2:
+							//send logout request
+								if(send_LOGOUT(client_sock)==-1)
+									{close(client_sock);printf("connect is die\n");return -1;}
+								if(receive_message(client_sock,&msg)==-1){
+									printf("connect is die\n");return -1;}
+								//if logout success
+								if(msg.code==LOGOUT_SUCCESS){
+									printf("goodbye!\n");
+								}
+								else if(msg.code==LOGOUT_UNSUCCESS){
+									printf("logout uncess!\n");
+								}
+								else{
+									printf("unknown code from server!\n");
+								}
+								break;
+							default:
+								printf("please enter a number in range 1 and 2!\n");
+								break;
+						}
+					}while(choosemenu!=2);
 				
 		}
 		

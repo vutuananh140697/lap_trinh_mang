@@ -137,68 +137,74 @@ int check_error(int a, int b, int c){
 
 int send_REQUEST_ROOM_LIST(int socket,ROOM_LIST_PARAM param){
 
-	int a = send_a_int(socket, REQUEST_ROOM_LIST);if(a!=0){return -1;}
-	int b = send_a_int(socket, sizeof(ROOM_LIST_PARAM));if(b!=0){return -1;}
-	int c = send_a_int(socket, param.page_id);if(c!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_ROOM_LIST);
+	int b = send_a_int(socket, sizeof(ROOM_LIST_PARAM));
+	int c = send_a_int(socket, param.page_id);
 	return check_error(a,b,c);
 }
 
 int receive_REQUEST_ROOM_LIST(int socket, web_message *message){
 	ROOM_LIST_PARAM *param = (ROOM_LIST_PARAM*)malloc(sizeof(ROOM_LIST_PARAM));
-	int b = recv_a_int(socket, &message->data_len);if(b!=0){return -1;}
-	int c = recv_a_int(socket, &param->page_id);if(c!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &message->data_len);
+	printf("b ok \n");
+	int c = recv_a_int(socket, &param->page_id);
+	printf("c ok \n");
 	message->data = param;
 	return check_error(0, b, c);
 }
 
 int send_RESPOND_ROOM_LIST(int socket,ROOM_LIST_RESPOND data){
-	int a = send_a_int(socket, RESPOND_ROOM_LIST);if(a!=0){return -1;}
-	int b = send_room_list(socket, data.header);if(b!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_ROOM_LIST);
+	int b = send_room_list(socket, data.header);
 	return check_error(a, b, 0);
 }
 
 int receive_RESPOND_ROOM_LIST(int socket, web_message *message){
 	ROOM_LIST_RESPOND *param = (ROOM_LIST_RESPOND*)malloc(sizeof(ROOM_LIST_RESPOND));
 	Room **header = create_room_list();
-	int b = recv_room_list(socket, header);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_room_list(socket, header);
 	param->header = *header;
 	message->data = param;
 	return check_error(0, b, 0);
 }
 
 int send_REQUEST_BUY_NOW(int socket,BUY_NOW_PARAM param){
-	int a = send_a_int(socket, REQUEST_BUY_NOW);if(a!=0){return -1;}
-	int b = send_a_int(socket, sizeof(BUY_NOW_PARAM));if(b!=0){return -1;}
-	int c = send_a_int(socket, param.id);if(c!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_BUY_NOW);
+	int b = send_a_int(socket, sizeof(BUY_NOW_PARAM));
+	int c = send_a_int(socket, param.id);
 	return check_error(a, b, c);
 }
 
 int receive_REQUEST_BUY_NOW(int socket, web_message *message){
 	BUY_NOW_PARAM *param = (BUY_NOW_PARAM*)malloc(sizeof(BUY_NOW_PARAM));
-	int b = recv_a_int(socket, &message->data_len);if(b!=0){return -1;}
-	int c = recv_a_int(socket, &param->id);if(c!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &message->data_len);
+	int c = recv_a_int(socket, &param->id);
 	message->data = param;
 	return check_error(0, b, c);
 }
 
 int send_RESPOND_BUY_NOW(int socket,BUY_NOW_RESPOND data){
-	int a = send_a_int(socket, RESPOND_BUY_NOW);if(a!=0){return -1;}
-	int b = send_a_string(socket, data.message);if(b!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_BUY_NOW);
+	int b = send_a_string(socket, data.message);
 	return check_error(a, b, 0);
 }
 
 int receive_RESPOND_BUY_NOW(int socket, web_message *message){
 	BUY_NOW_RESPOND *param = (BUY_NOW_RESPOND*)malloc(sizeof(BUY_NOW_RESPOND));
 	char mess[1000];
-	int b = recv_a_string(socket, mess);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_string(socket, mess);
 	param->message = mess;
 	message->data = param;
 	return check_error(0, b, 0);
 }
 
 int send_REQUEST_MAKE_ROOM(int socket,MAKE_ROOM_PARAM param){
-	int a = send_a_int(socket, REQUEST_MAKE_ROOM);if(a!=0){return -1;}
-	int b = send_a_queue(socket, param.product_list);if(b!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_MAKE_ROOM);
+	int b = send_a_queue(socket, param.product_list);
 	return check_error(a, b, 0);
 }
 
@@ -206,58 +212,62 @@ int receive_REQUEST_MAKE_ROOM(int socket, web_message *message){
 	MAKE_ROOM_PARAM *param = (MAKE_ROOM_PARAM*)malloc(sizeof(MAKE_ROOM_PARAM));
 	Queue *Q;
 	Q = Init(Q);
-	int b = recv_a_queue(socket, Q);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_queue(socket, Q);
 	param->product_list = Q;
 	message->data = param;
 	return check_error(0, b, 0);
 }
 
 int send_RESPOND_MAKE_ROOM(int socket,MAKE_ROOM_RESPOND data){
-	int a = send_a_int(socket, RESPOND_MAKE_ROOM);if(a!=0){return -1;}
-	int b = send_a_string(socket, data.message);if(b!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_MAKE_ROOM);
+	int b = send_a_string(socket, data.message);
 	return check_error(a, b, 0);
 }
 
 int receive_RESPOND_MAKE_ROOM(int socket, web_message *message){
 	MAKE_ROOM_RESPOND *param = (MAKE_ROOM_RESPOND*)malloc(sizeof(MAKE_ROOM_RESPOND));
 	char mess[1000];
-	int b = recv_a_string(socket, mess);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_string(socket, mess);
 	param->message = mess;
 	message->data = param;
 	return check_error(0, b, 0);
 }
 
 int send_REQUEST_ROOM_DETAIL(int socket,ROOM_DETAIL_PARAM param){
-	int a = send_a_int(socket, REQUEST_ROOM_DETAIL);if(a!=0){return -1;}
-	int b = send_a_int(socket, sizeof(ROOM_DETAIL_PARAM));if(b!=0){return -1;}
-	int c = send_a_int(socket, param.room_id);if(c!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_ROOM_DETAIL);
+	int b = send_a_int(socket, sizeof(ROOM_DETAIL_PARAM));
+	int c = send_a_int(socket, param.room_id);
 	return check_error(a, b, c);
 }
 
 int receive_REQUEST_ROOM_DETAIL(int socket, web_message *message){
 	ROOM_DETAIL_PARAM *param = (ROOM_DETAIL_PARAM*)malloc(sizeof(ROOM_DETAIL_PARAM));
-	int b = recv_a_int(socket, &message->data_len);if(b!=0){return -1;}
-	int c = recv_a_int(socket, &param->room_id);if(c!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &message->data_len);
+	int c = recv_a_int(socket, &param->room_id);
 	message->data = param;
 	return check_error(0, b, c);
 }
 
 int send_RESPOND_ROOM_DETAIL(int socket,ROOM_DETAIL_RESPOND data){
-	int a = send_a_int(socket, RESPOND_ROOM_DETAIL);if(a!=0){return -1;}
-	int b = send_a_int(socket, data.result);if(b!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_ROOM_DETAIL);
+	int b = send_a_int(socket, data.result);
 	int c = 0;
 	if(data.result != 0)
-		c = send_a_room(socket, data.room);if(c!=0){return -1;}
+		c = send_a_room(socket, data.room);
 	return check_error(a, b, c);
 }
 
 int receive_RESPOND_ROOM_DETAIL(int socket, web_message *message){
 	ROOM_DETAIL_RESPOND *param = (ROOM_DETAIL_RESPOND*)malloc(sizeof(ROOM_DETAIL_RESPOND));
 	Room *room = (Room*)malloc(sizeof(Room));
-	int b = recv_a_int(socket, &param->result);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &param->result);
 	int c = 0;
 	if(param->result != 0){
-		c = recv_a_room(socket, room);if(c!=0){return -1;}
+		c = recv_a_room(socket, room);
 		param->room = room;
 	}
 	message->data = param;
@@ -265,81 +275,90 @@ int receive_RESPOND_ROOM_DETAIL(int socket, web_message *message){
 }
 
 int send_REQUEST_MY_ROOM_LIST(int socket,MY_ROOM_LIST_PARAM param){
-	int a = send_a_int(socket, REQUEST_MY_ROOM_LIST);if(a!=0){return -1;}
-	int b = send_a_int(socket, sizeof(MY_ROOM_LIST_PARAM));if(b!=0){return -1;}
-	int c = send_a_int(socket, param.page_id);if(c!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_MY_ROOM_LIST);
+	int b = send_a_int(socket, sizeof(MY_ROOM_LIST_PARAM));
+	int c = send_a_int(socket, param.page_id);
 	return check_error(a,b,c);
 }
 
 int receive_REQUEST_MY_ROOM_LIST(int socket, web_message *message){
 	MY_ROOM_LIST_PARAM *param = (MY_ROOM_LIST_PARAM*)malloc(sizeof(MY_ROOM_LIST_PARAM));
-	int b = recv_a_int(socket, &message->data_len);if(b!=0){return -1;}
-	int c = recv_a_int(socket, &param->page_id);if(c!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &message->data_len);
+	int c = recv_a_int(socket, &param->page_id);
 	message->data = param;
 	return check_error(0, b, c);
 }
 
 int send_RESPOND_MY_ROOM_LIST(int socket,MY_ROOM_LIST_RESPOND data){
-	int a = send_a_int(socket, RESPOND_MY_ROOM_LIST);if(a!=0){return -1;}
-	int b = send_room_list(socket, data.header);if(b!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_MY_ROOM_LIST);
+	int b = send_room_list(socket, data.header);
 	return check_error(a, b, 0);
 }
 
 int receive_RESPOND_MY_ROOM_LIST(int socket, web_message *message){
 	MY_ROOM_LIST_RESPOND *param = (MY_ROOM_LIST_RESPOND*)malloc(sizeof(MY_ROOM_LIST_RESPOND));
 	Room **header = create_room_list();
-	int b = recv_room_list(socket, header);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_room_list(socket, header);
 	param->header = *header;
 	message->data = param;
 	return check_error(0, b, 0);
 }
 int send_REQUEST_ENTER_ROOM(int socket,ENTER_ROOM_PARAM param){
-	int a = send_a_int(socket, REQUEST_ENTER_ROOM);if(a!=0){return -1;}
-	int b = send_a_int(socket, sizeof(ENTER_ROOM_PARAM));if(b!=0){return -1;}
-	int c = send_a_int(socket, param.room_id);if(c!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_ENTER_ROOM);
+	int b = send_a_int(socket, sizeof(ENTER_ROOM_PARAM));
+	int c = send_a_int(socket, param.room_id);
 	return check_error(a, b, c);
 }
 int receive_REQUEST_ENTER_ROOM(int socket, web_message *message){
 	ENTER_ROOM_PARAM *param = (ENTER_ROOM_PARAM*)malloc(sizeof(ENTER_ROOM_PARAM));
-	int b = recv_a_int(socket, &message->data_len);if(b!=0){return -1;}
-	int c = recv_a_int(socket, &param->room_id);if(c!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &message->data_len);
+	int c = recv_a_int(socket, &param->room_id);
 	message->data = param;
 	return check_error(0, b, c);
 }
 int send_RESPOND_ENTER_ROOM(int socket,ENTER_ROOM_RESPOND data){
-	int a = send_a_int(socket, RESPOND_ENTER_ROOM);if(a!=0){return -1;}
-	int b = send_a_int(socket, data.result);if(b!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_ENTER_ROOM);
+	int b = send_a_int(socket, data.result);
 	int c = 0;
 	if(data.result != 0)
-		c = send_a_room(socket, data.room);if(c!=0){return -1;}
+		c = send_a_room(socket, data.room);
 	return check_error(a, b, c);
 }
 int receive_RESPOND_ENTER_ROOM(int socket, web_message *message){
 	ENTER_ROOM_RESPOND *param = (ENTER_ROOM_RESPOND*)malloc(sizeof(ENTER_ROOM_RESPOND));
 	Room *room = (Room*)malloc(sizeof(Room));
-	int b = recv_a_int(socket, &param->result);if(b!=0){return -1;}
+	// int a = recv_a_int(socket, &message->code);
+	int b = recv_a_int(socket, &param->result);
 	int c = 0;
 	if(param->result != 0){
-		c = recv_a_room(socket, room);if(c!=0){return -1;}
+		c = recv_a_room(socket, room);
 		param->room = room;
 	}
 	message->data = param;
 	return check_error(0, b, 0);
 }
 int send_LOG_OUT_REQUEST(int socket){
-	int a = send_a_int(socket, REQUEST_LOG_OUT);if(a!=0){return -1;}
+	int a = send_a_int(socket, REQUEST_LOG_OUT);
 	return check_error(a, 0, 0);
 }
 int send_LOG_OUT_RESPOND(int socket){
-	int a = send_a_int(socket, RESPOND_LOG_OUT);if(a!=0){return -1;}
+	int a = send_a_int(socket, RESPOND_LOG_OUT);
 	return check_error(a, 0, 0);
 }
 int receive_web_message(int socket, web_message *message){
-	int a = recv_a_int(socket, &message->code);if(a!=0){return -1;}
+	int a = recv_a_int(socket, &message->code);
+	if(a!=0){
+		return -1;	
+	}
 	int b = -1;
 	switch(message->code){
 		case REQUEST_ROOM_LIST:
+			// printf("REQUEST_ROOM_LIST reviece\n");
 			b = receive_REQUEST_ROOM_LIST(socket, message);
+			// printf("REQUEST_ROOM_LIST reviece end \n");
 			break;
 		case RESPOND_ROOM_LIST:
 			b = receive_RESPOND_ROOM_LIST(socket, message);

@@ -209,7 +209,7 @@ int login_protocol_handle(SESSION * session,int sockfd,fd_set *readfds,fd_set *w
 					}
 					return 0;
 }
-int web_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client,int sockfd,
+int web_protocol_handle(SESSION * session,int sockfd,
 	fd_set *readfds,fd_set *writefds,fd_set *exceptfds,fd_set *checkfds_read,fd_set *checkfds_write,
 	map_socket_to_room_type map_socket_to_seeing_room,
 	Room **header,Room **my_room){
@@ -260,32 +260,7 @@ int web_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client,int
 						//delete product
 						if(search_item == NULL){
 							strcpy(message_buy_now_respond, "Cannot found product");
-						}
-						else
-						{
-							
-
-							NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
-							notify_new_price_respond.newprice=search_item->price;
-							notify_new_price_respond.winner_name=(char *)malloc(sizeof(char)*100);
-							strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
-							notify_new_price_respond.start=search_item->start;
-							notify_new_price_respond.count=3;
-
-							for(int i=0;i<FD_SETSIZE;i++){
-								if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
-									if(client[i]!=sockfd){
-										if(send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond))
-											return -1;
-										printf("send notify to client %d\n",i);
-									}
-
-
-								}
-								// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
-								// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-								// }
-							}
+						}else{
 							deleteItem(((session->web_data).room)->product_list, buy_now_param->id);
 							print_all_room(header);
 							strcpy(message_buy_now_respond, "Buy successfully");
@@ -361,9 +336,6 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 
 	auction_message msg;
 	SET_PRICE_RESPOND set_price_respond;
-	EXIT_ROOM_RESPOND exit_room_respond;
-	char exit_room[100] = "Exit room successfully";
-    exit_room_respond.message = exit_room;
 	if(receive_auction_message(sockfd, &msg)!=0)
 		return -1;
 	printf("receive_message successfully\n");
@@ -423,13 +395,6 @@ int auction_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client
 
 		}
 
-	}
-	else if(msg.code==REQUEST_EXIT_ROOM){
-		printf("exit message");
-		// if(session[i].auction_data.room->id == top->id){
-			send_RESPOND_EXIT_ROOM(sockfd, exit_room_respond);
-			session->protocol_group_id = web_protocol;
-		// }
 	}
 	else{
 		if(send_AUCTION_UNKNOWN(sockfd)!=0){
@@ -611,7 +576,7 @@ int main(int argc,char *argv[])
 				else if (session[i].protocol_group_id==web_protocol && FD_ISSET(sockfd,&readfds))
 				{
 					printf("xu ly web_protocol\n");
-					if(web_protocol_handle(&session[i],session,client,client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write,map_socket_to_seeing_room[i],header,my_room[i])!=0){
+					if(web_protocol_handle(&session[i],client[i],&readfds,&writefds,&exceptfds,&checkfds_read,&checkfds_write,map_socket_to_seeing_room[i],header,my_room[i])!=0){
 						FD_CLR(client[i],&checkfds_read);
 						FD_CLR(client[i],&checkfds_write);
 						FD_CLR(client[i],&checkfds_exception);
