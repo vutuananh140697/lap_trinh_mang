@@ -89,7 +89,7 @@ void join_auction_handle(int socket){
 		readfds = checkfds_read;
 		writefds = checkfds_write;
 		exceptfds = checkfds_exception;
-		printf("1. Send price\n2. Out\nchoose: ");
+		printf("1. Send price\n2. Out\nchoose:\n");
 		nready = select(1025,&readfds,&writefds,&exceptfds,NULL);
 		
 
@@ -102,6 +102,10 @@ void join_auction_handle(int socket){
 					exit(-1);
 				}
 				break;
+			}
+			if(auction_choose!=1&& auction_choose!=2){
+				printf("Invalid choose\n");
+				continue;
 			}
 			printf("price: \n");
 			scanf("%d%*c",&price);
@@ -366,7 +370,7 @@ int main(int argc,char *argv[]){
 													}
 													else if(add_room_choose==2){
 														if(count_products(Q)==0){
-															printf("Ban chua nhap bat ky san pham nao\n");
+															printf("You have add at least one item!\n");
 															continue;
 														}
 														else{
@@ -394,7 +398,7 @@ int main(int argc,char *argv[]){
 															}
 														}
 
-														Push(Q, item->id, item->name, item->description, item->price, item->price_immediately);
+														Push(Q,item->id++, strdup(item->name), strdup(item->description), item->price, item->price_immediately);
 
 														// item->name = "Quan tai";
 														// Push(Q, item->id+1, item->name, "Quan tai co ngan nam", item->price, 106000000);

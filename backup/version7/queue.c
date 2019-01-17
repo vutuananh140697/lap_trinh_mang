@@ -114,7 +114,7 @@ void deleteItem(Queue *Q, int id){
 }
 
 void printItem(Item *item){
-    printf("\tID: %d\tname: %s\tdescription: %s\tbase price: %d\tbuy now: %d\n", item->id, item->name, item->description, item->price, item->price_immediately);
+    printf("\t%d %s %s %d %d\n", item->id, item->name, item->description, item->price, item->price_immediately);
 }
 
 void Output(Queue Q)

@@ -394,7 +394,7 @@ int main(int argc,char *argv[]){
 															}
 														}
 
-														Push(Q, item->id, item->name, item->description, item->price, item->price_immediately);
+														Push(Q, item->id++, strdup(item->name), strdup(item->description), item->price, item->price_immediately);
 
 														// item->name = "Quan tai";
 														// Push(Q, item->id+1, item->name, "Quan tai co ngan nam", item->price, 106000000);

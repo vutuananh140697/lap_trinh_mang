@@ -263,32 +263,34 @@ int web_protocol_handle(SESSION * session,SESSION * all_sesssion,int *client,int
 						}
 						else
 						{
-							
-
-							NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
-							notify_new_price_respond.newprice=search_item->price;
-							notify_new_price_respond.winner_name=(char *)malloc(sizeof(char)*100);
-							strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
-							notify_new_price_respond.start=search_item->start;
-							notify_new_price_respond.count=3;
-
-							for(int i=0;i<FD_SETSIZE;i++){
-								if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
-									if(client[i]!=sockfd){
-										if(send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond))
-											return -1;
-										printf("send notify to client %d\n",i);
-									}
-
-
-								}
-								// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
-								// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
-								// }
-							}
 							deleteItem(((session->web_data).room)->product_list, buy_now_param->id);
 							print_all_room(header);
 							strcpy(message_buy_now_respond, "Buy successfully");
+							
+
+							// NOTIFY_NEW_PRICE_RESPOND notify_new_price_respond;
+							// notify_new_price_respond.newprice=search_item->price;
+							// notify_new_price_respond.winner_name=(char *)malloc(sizeof(char)*100);
+							// strcpy(notify_new_price_respond.winner_name,(session->login_data).user->name);
+							// notify_new_price_respond.start=search_item->start;
+							// notify_new_price_respond.count=2;
+
+							// for(int i=0;i<FD_SETSIZE;i++){
+							// 	if(all_sesssion[i].protocol_group_id==auction_protocol&&(all_sesssion[i].auction_data).room->id==(session->auction_data).room->id){
+							// 		if(client[i]!=-1&&client[i]!=sockfd){
+							// 			if(send_NOTIFY_NEW_PRICE(client[i], notify_new_price_respond)!=0)
+							// 				return -1;
+							// 			// all_sesssion[i]->protocol_state=auction_data;
+							// 			printf("send notify to client %d\n",i);
+							// 		}
+
+
+							// 	}
+							// 	// else if((all_sesssion[i].web_protocol).room->id==(session->auction_data).room->id && all_sesssion[i]->protocol_state==web_protocol){
+							// 	// 	send_NOTIFY_NEW_PRICE(client[i],NOTIFY_NEW_PRICE_RESPOND data);
+							// 	// }
+							// }
+							
 						}
 						buy_now_respond.message = message_buy_now_respond;
 						if(send_RESPOND_BUY_NOW(sockfd, buy_now_respond) != 0)
@@ -459,8 +461,6 @@ int main(int argc,char *argv[])
 	//
 	validate_input(argc,argv);
 	load_data_base();
-
-	print_all_node(database_link_list);
  	int PORT=atoi(argv[1]);
 	int listenfd, connfd; 
 	char recv_data[BUFF_SIZE];
@@ -524,7 +524,6 @@ int main(int argc,char *argv[])
 
 	printf("Server is ready\n");
 	//Communicate with client
-	printf("%d\n", listenfd	 );
 	int value=0;
 	struct timeval tv={0,100};
 
@@ -725,7 +724,7 @@ int main(int argc,char *argv[])
 			else{
 				for(i=0; i<FD_SETSIZE; i++){
 					if(session[i].auction_data.room != NULL)
-						if(client[i] != -1 && session[i].auction_data.room->id == top->id){
+						if(client[i] != -1 && session[i].auction_data.room->id == top->id&&session[i].protocol_group_id==auction_protocol){
 							send_RESPOND_EXIT_ROOM(client[i], exit_room_respond);
 							session[i].protocol_group_id = web_protocol;
 						}
